@@ -7,7 +7,6 @@ import {
   FileText, 
   Users, 
   ArrowRight, 
-  Sparkles,
   Stethoscope
 } from 'lucide-react';
 

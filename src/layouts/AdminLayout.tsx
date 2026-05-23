@@ -15,14 +15,12 @@ interface AdminLayoutProps {
   children: React.ReactNode;
   currentView: string;
   setView: (view: string) => void;
-  title?: string;
 }
 
 export const AdminLayout: React.FC<AdminLayoutProps> = ({ 
   children, 
   currentView, 
-  setView, 
-  title = "Panel de Control" 
+  setView 
 }) => {
   const [userEmail, setUserEmail] = useState('Cargando...');
   const [userRole, setUserRole] = useState('admin');

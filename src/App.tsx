@@ -93,7 +93,7 @@ export const App: React.FC = () => {
 
   // Rutas privadas (Administración) envueltas en AdminLayout
   return (
-    <AdminLayout currentView={view} setView={setView} title={view.toUpperCase()}>
+    <AdminLayout currentView={view} setView={setView}>
       {view === 'dashboard' && <DashboardPanel setView={setView} />}
       {view === 'pacientes' && <PacientesPanel />}
       {view === 'medicos' && <MedicosPanel />}

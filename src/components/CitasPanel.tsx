@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
-import { Search, CalendarPlus, Loader2, Calendar, Clock, User, FileText, Info } from 'lucide-react';
+import { Search, CalendarPlus, Loader2 } from 'lucide-react';
 
 interface Paciente {
   id: number;

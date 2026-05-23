@@ -212,12 +212,12 @@ export const DashboardPanel: React.FC<DashboardPanelProps> = ({ setView }) => {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr class="bg-slate-50 dark:bg-slate-900/30 text-slate-500 dark:text-slate-400 text-xs font-bold uppercase border-b border-slate-200 dark:border-slate-800">
-                <th class="p-4 pl-6">Paciente</th>
-                <th class="p-4 text-center">Fecha</th>
-                <th class="p-4 text-center">Hora</th>
-                <th class="p-4">Tratamiento/Especialidad</th>
-                <th class="p-4 pr-6 text-center">Estado</th>
+              <tr className="bg-slate-50 dark:bg-slate-900/30 text-slate-500 dark:text-slate-400 text-xs font-bold uppercase border-b border-slate-200 dark:border-slate-800">
+                <th className="p-4 pl-6">Paciente</th>
+                <th className="p-4 text-center">Fecha</th>
+                <th className="p-4 text-center">Hora</th>
+                <th className="p-4">Tratamiento/Especialidad</th>
+                <th className="p-4 pr-6 text-center">Estado</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-sm">

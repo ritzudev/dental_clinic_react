@@ -337,7 +337,7 @@ export const PacientesPanel: React.FC = () => {
 
             <div className="border-b border-slate-200 dark:border-slate-800 pb-4 mb-6">
               <h2 className="text-2xl md:text-3xl font-extrabold text-blue-900 dark:text-cyan-400">Ficha Clínica de Paciente</h2>
-              <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Expediente de filiación y contacto legal del paciente.</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Expediente de filiación y contacto legal del paciente.</p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 text-sm">
