@@ -67,6 +67,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ setView }) => {
     }
   };
 
+  const handleSecondaryClick = () => {
+    if (isLoggedIn) {
+      setView('dashboard');
+    } else {
+      setView('register');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 flex flex-col justify-between transition-colors duration-500 overflow-x-hidden animated-bg relative">
       
@@ -99,6 +107,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({ setView }) => {
             )}
           </button>
 
+          {!isLoggedIn && (
+            <button
+              onClick={() => setView('register')}
+              className="px-4 py-2 rounded-xl text-sm font-semibold border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900/60 text-slate-700 dark:text-slate-300 transition-all"
+            >
+              Regístrate
+            </button>
+          )}
+
           {/* Botón de acceso rápido */}
           <button
             onClick={handlePrimaryClick}
@@ -129,7 +146,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ setView }) => {
 
         {/* Subtítulo */}
         <p className="text-lg md:text-xl text-slate-500 dark:text-slate-400 max-w-2xl leading-relaxed">
-          Accede a tratamientos personalizados, agenda tus citas de forma ágil e interactúa con nuestro equipo de profesionales dentales desde una sola plataforma.
+          Accede a tratamientos personalizados, agenda tus citas con rapidez y lleva tu historial dental de forma segura en un solo lugar.
         </p>
 
         {/* Botón de Llamado a la Acción (CTA) */}
@@ -141,6 +158,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({ setView }) => {
             {isLoggedIn ? 'Ir al Panel de Control' : 'Acceso al Portal Clínico'}
             <ArrowRight className="w-5 h-5" />
           </button>
+
+          {!isLoggedIn && (
+            <button
+              onClick={handleSecondaryClick}
+              className="w-full sm:w-auto py-4 px-8 rounded-2xl text-base font-semibold border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/80 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-900 transition-all"
+            >
+              Crear cuenta gratis
+            </button>
+          )}
         </div>
 
         {/* Tarjetas de Servicios Rápidos */}
