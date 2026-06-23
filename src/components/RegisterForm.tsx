@@ -184,9 +184,9 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess, setView }
             className="block w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:focus:ring-cyan-400 font-bold"
             disabled={isLoading}
           >
-            <option value="admin">Administrador 👑</option>
-            <option value="recepcionista">Recepción / Secretaría 💼</option>
-            <option value="medico">Médico Odontólogo 🩺</option>
+            <option value="admin">Administrador </option>
+            <option value="recepcionista">Recepción / Secretaría </option>
+            <option value="medico">Médico Odontólogo </option>
           </select>
         </div>
 

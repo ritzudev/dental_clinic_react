@@ -9,22 +9,36 @@ import { PacientesPanel } from './components/PacientesPanel';
 import { MedicosPanel } from './components/MedicosPanel';
 import { HorariosPanel } from './components/HorariosPanel';
 import { CitasPanel } from './components/CitasPanel';
+import { HistoriaClinicaPanel } from './components/HistoriaClinicaPanel';
+import { TratamientosPanel } from './components/TratamientosPanel';
 import { Loader2 } from 'lucide-react';
 
 export const App: React.FC = () => {
   const [view, setView] = useState<string>('loading');
   const [sessionChecked, setSessionChecked] = useState(false);
-
+useEffect(() => {
+  if (
+    view !== 'loading' &&
+    view !== 'landing' &&
+    view !== 'login' &&
+    view !== 'register'
+  ) {
+    localStorage.setItem('current-view', view);
+  }
+}, [view]);
   useEffect(() => {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       
       // Control de sesión inicial
       if (session && session.user) {
-        setView('dashboard');
-      } else {
-        setView('landing');
-      }
+  const savedView =
+    localStorage.getItem('current-view') || 'dashboard';
+
+  setView(savedView);
+} else {
+  setView('landing');
+}
       setSessionChecked(true);
     };
 
@@ -32,14 +46,17 @@ export const App: React.FC = () => {
 
     // Escuchar cambios de autenticación
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (sessionChecked) {
-        if (session) {
-          setView('dashboard');
-        } else {
-          setView('landing');
-        }
-      }
-    });
+  if (sessionChecked) {
+    if (session) {
+      const savedView =
+        localStorage.getItem('current-view') || 'dashboard';
+
+      setView(savedView);
+    } else {
+      setView('landing');
+    }
+  }
+});
 
     return () => {
       subscription.unsubscribe();
@@ -99,6 +116,8 @@ export const App: React.FC = () => {
       {view === 'medicos' && <MedicosPanel />}
       {view === 'horarios' && <HorariosPanel />}
       {view === 'citas' && <CitasPanel />}
+      {view === 'historia-clinica' && <HistoriaClinicaPanel />}
+      {view === 'tratamientos' && <TratamientosPanel />}
     </AdminLayout>
   );
 };

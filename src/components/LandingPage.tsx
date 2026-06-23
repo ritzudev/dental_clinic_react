@@ -141,7 +141,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ setView }) => {
 
         {/* Título Hero Principal */}
         <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-slate-800 dark:text-white max-w-4xl leading-tight">
-          Tu salud dental en manos de la <span className="bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-600 bg-clip-text text-transparent">innovación</span>
+          Villa 920  <span className="bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-600 bg-clip-text text-transparent">dental</span>
         </h1>
 
         {/* Subtítulo */}

@@ -90,9 +90,14 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
     { id: 'medicos', label: 'Médicos', icon: ShieldAlert, roles: ['admin'] },
     { id: 'horarios', label: 'Horarios', icon: Clock3, roles: ['admin', 'recepcionista', 'medico'] },
     { id: 'citas', label: 'Citas', icon: CalendarRange, roles: ['admin', 'recepcionista', 'medico'] },
+
+    { id: 'historia-clinica', label: 'Historia Clínica', icon: ShieldAlert, roles: ['admin', 'medico'] },
+    { id: 'tratamientos', label: 'Tratamientos', icon: ShieldAlert, roles: ['admin', 'medico'] },
   ];
 
   const filteredMenuItems = menuItems.filter(item => item.roles.includes(userRole));
+  console.log("ROL ACTUAL:", userRole);
+console.log("MENU ITEMS:", filteredMenuItems);
 
   return (
     <div className="flex h-full w-full overflow-hidden bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-300">
