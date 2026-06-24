@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Search, User } from 'lucide-react';
 
@@ -184,7 +184,7 @@ export const HistoriaClinicaPanel = () => {
             setPacienteSeleccionado(null);
             setHistorial([]);
           }}
-          className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-400 text-white"
+          className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-400 text-white cursor-pointer"
         >
           Cerrar
         </button>
