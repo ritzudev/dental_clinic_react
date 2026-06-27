@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import { Search, CalendarPlus, Loader2 } from 'lucide-react';
+import toast from "react-hot-toast";
 
 interface Paciente {
   id: number;
@@ -46,6 +47,14 @@ export const CitasPanel: React.FC = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedCita, setSelectedCita] = useState<Cita | null>(null);
+  const [showHistoriaModal, setShowHistoriaModal] = useState(false);
+  const [historiaData, setHistoriaData] = useState({
+  motivo_consulta: '',
+  diagnostico: '',
+  tratamiento_realizado: '',
+  observaciones: ''
+});
+  
 
   // Formulario nueva cita
   const [newCita, setNewCita] = useState({
@@ -195,6 +204,47 @@ export const CitasPanel: React.FC = () => {
       setIsSubmitting(false);
     }
   };
+
+  const guardarHistoriaClinica = async () => {
+  if (!selectedCita) return;
+
+  try {
+    const { error } = await supabase
+      .from('historias_clinicas')
+      .insert([
+        {
+          paciente_id: selectedCita.paciente_id,
+          medico_id: selectedCita.medico_id,
+          cita_id: selectedCita.id,
+          motivo_consulta: historiaData.motivo_consulta,
+          diagnostico: historiaData.diagnostico,
+          tratamiento_realizado: historiaData.tratamiento_realizado,
+          observaciones: historiaData.observaciones
+        }
+      ]);
+
+    if (error) {
+  console.error(error);
+  toast.error(error.message);
+  return;
+}
+
+    toast.success('Historia clínica guardada correctamente');
+
+    setHistoriaData({
+      motivo_consulta: '',
+      diagnostico: '',
+      tratamiento_realizado: '',
+      observaciones: ''
+    });
+
+    setShowHistoriaModal(false);
+
+  } catch (err) {
+    console.error(err);
+    toast.error('Error inesperado');
+  }
+};
 
   const openFicha = (cita: Cita) => {
     setSelectedCita(cita);
@@ -572,8 +622,21 @@ export const CitasPanel: React.FC = () => {
               )}
 
               {selectedCita.estado === 'atendida' && (
-                <div className="text-xs text-emerald-500 font-bold bg-emerald-50 dark:bg-emerald-950/20 px-3.5 py-2 rounded-xl">La consulta fue completada correctamente.</div>
-              )}
+  <div className="flex flex-col gap-3">
+
+    <div className="text-xs text-emerald-500 font-bold bg-emerald-50 dark:bg-emerald-950/20 px-3.5 py-2 rounded-xl">
+      La consulta fue completada correctamente.
+    </div>
+
+    <button
+      onClick={() => setShowHistoriaModal(true)}
+      className="px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-cyan-600 hover:bg-cyan-700 transition-all"
+    >
+      Registrar Historia Clínica
+    </button>
+
+  </div>
+)}
             </div>
 
             <div className="flex justify-end border-t border-slate-200 dark:border-slate-800 pt-5 mt-6">
@@ -581,7 +644,122 @@ export const CitasPanel: React.FC = () => {
             </div>
           </div>
         </div>
+
+
+
       )}
+      {showHistoriaModal && (
+  <div className="fixed inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm flex justify-center items-center z-50 p-4">
+
+    <div className="bg-white dark:bg-slate-900 w-full max-w-3xl rounded-2xl shadow-2xl p-6 md:p-8 border border-slate-200 dark:border-slate-800">
+
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-extrabold text-slate-800 dark:text-white">
+          Registrar Historia Clínica
+        </h2>
+        <button
+          onClick={() => setShowHistoriaModal(false)}
+          className="text-2xl text-slate-400 hover:text-red-500"
+        >
+          ×
+        </button>
+      </div>
+
+      <div className="space-y-4">
+
+        <div>
+          <label className="block mb-2 font-bold">
+            Motivo de Consulta
+          </label>
+
+          <textarea
+            value={historiaData.motivo_consulta}
+            onChange={(e) =>
+              setHistoriaData({
+                ...historiaData,
+                motivo_consulta: e.target.value
+              })
+            }
+            className="w-full border rounded-xl p-3"
+            rows={3}
+          />
+        </div>
+
+        <div>
+          <label className="block mb-2 font-bold">
+            Diagnóstico
+          </label>
+
+          <textarea
+            value={historiaData.diagnostico}
+            onChange={(e) =>
+              setHistoriaData({
+                ...historiaData,
+                diagnostico: e.target.value
+              })
+            }
+            className="w-full border rounded-xl p-3"
+            rows={3}
+          />
+        </div>
+
+        <div>
+          <label className="block mb-2 font-bold">
+            Tratamiento Realizado
+          </label>
+
+          <textarea
+            value={historiaData.tratamiento_realizado}
+            onChange={(e) =>
+              setHistoriaData({
+                ...historiaData,
+                tratamiento_realizado: e.target.value
+              })
+            }
+            className="w-full border rounded-xl p-3"
+            rows={3}
+          />
+        </div>
+
+        <div>
+          <label className="block mb-2 font-bold">
+            Observaciones
+          </label>
+
+          <textarea
+            value={historiaData.observaciones}
+            onChange={(e) =>
+              setHistoriaData({
+                ...historiaData,
+                observaciones: e.target.value
+              })
+            }
+            className="w-full border rounded-xl p-3"
+            rows={3}
+          />
+        </div>
+
+        <div className="flex justify-end gap-3 mt-6">
+          <button
+            onClick={() => setShowHistoriaModal(false)}
+            className="px-5 py-3 rounded-xl border border-slate-300"
+          >
+            Cancelar
+          </button>
+
+          <button
+            onClick={guardarHistoriaClinica}
+            className="px-5 py-3 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white font-bold"
+          >
+            Guardar Historia Clínica
+          </button>
+        </div>
+
+      </div>
+
     </div>
-  );
-};
+</div>
+      )}
+  </div>
+  
+)}
