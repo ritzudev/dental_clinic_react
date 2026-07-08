@@ -54,7 +54,21 @@ export const CitasPanel: React.FC = () => {
   tratamiento_realizado: '',
   observaciones: ''
 });
-  
+  const [showTratamientoModal, setShowTratamientoModal] = useState(false);
+
+const [tratamientoData, setTratamientoData] = useState({
+  nombre_tratamiento: '',
+  descripcion: '',
+  costo: 0,
+  estado: 'pendiente'
+});
+const [historiaExiste, setHistoriaExiste] = useState(false);
+
+const [historiaCreadaId, setHistoriaCreadaId] = useState<number | null>(null);
+const [historiaSeleccionada, setHistoriaSeleccionada] = useState<any>(null);
+const [showVerHistoriaModal, setShowVerHistoriaModal] = useState(false);
+const [editandoHistoria, setEditandoHistoria] = useState(false);
+
 
   // Formulario nueva cita
   const [newCita, setNewCita] = useState({
@@ -209,25 +223,32 @@ export const CitasPanel: React.FC = () => {
   if (!selectedCita) return;
 
   try {
-    const { error } = await supabase
-      .from('historias_clinicas')
-      .insert([
-        {
-          paciente_id: selectedCita.paciente_id,
-          medico_id: selectedCita.medico_id,
-          cita_id: selectedCita.id,
-          motivo_consulta: historiaData.motivo_consulta,
-          diagnostico: historiaData.diagnostico,
-          tratamiento_realizado: historiaData.tratamiento_realizado,
-          observaciones: historiaData.observaciones
-        }
-      ]);
+    const { data: historiaGuardada, error } = await supabase
+  .from('historias_clinicas')
+  .insert([
+    {
+      paciente_id: selectedCita.paciente_id,
+      medico_id: selectedCita.medico_id,
+      cita_id: selectedCita.id,
+      motivo_consulta: historiaData.motivo_consulta,
+      diagnostico: historiaData.diagnostico,
+      tratamiento_realizado: historiaData.tratamiento_realizado,
+      observaciones: historiaData.observaciones
+    }
+  ])
+  .select()
+  .single();
 
     if (error) {
   console.error(error);
   toast.error(error.message);
   return;
 }
+setHistoriaCreadaId(historiaGuardada.id);
+
+setShowHistoriaModal(false);
+
+setShowTratamientoModal(true);
 
     toast.success('Historia clínica guardada correctamente');
 
@@ -238,18 +259,133 @@ export const CitasPanel: React.FC = () => {
       observaciones: ''
     });
 
-    setShowHistoriaModal(false);
+    
 
   } catch (err) {
     console.error(err);
     toast.error('Error inesperado');
   }
 };
+const guardarTratamiento = async () => {
+  if (!selectedCita || !historiaCreadaId) return;
 
-  const openFicha = (cita: Cita) => {
-    setSelectedCita(cita);
-    setShowViewModal(true);
-  };
+  if (!tratamientoData.nombre_tratamiento.trim()) {
+    toast.error('Ingrese el nombre del tratamiento');
+    return;
+  }
+
+  try {
+    const { error } = await supabase
+      .from('tratamientos')
+      .insert([
+        {
+          paciente_id: selectedCita.paciente_id,
+          historia_clinica_id: historiaCreadaId,
+          nombre_tratamiento: tratamientoData.nombre_tratamiento,
+          descripcion: tratamientoData.descripcion,
+          costo: Number(tratamientoData.costo),
+          estado: tratamientoData.estado
+        }
+      ]);
+
+    if (error) {
+      console.error(error);
+      toast.error(error.message);
+      return;
+    }
+
+    toast.success('Tratamiento registrado correctamente');
+
+    setTratamientoData({
+      nombre_tratamiento: '',
+      descripcion: '',
+      costo: 0,
+      estado: 'pendiente'
+    });
+
+    setShowTratamientoModal(false);
+
+  } catch (err) {
+    console.error(err);
+    toast.error('Error al registrar tratamiento');
+  }
+};
+
+const verHistoriaClinica = async () => {
+  if (!historiaCreadaId) return;
+
+  const { data, error } = await supabase
+    .from('historias_clinicas')
+    .select('*')
+    .eq('id', historiaCreadaId)
+    .single();
+
+  if (error) {
+    console.error(error);
+    toast.error('No se pudo cargar la historia clínica');
+    return;
+  }
+
+  setHistoriaSeleccionada(data);
+  setEditandoHistoria(false);
+  setShowVerHistoriaModal(true);
+};
+
+const guardarCambiosHistoria = async () => {
+  if (!historiaSeleccionada) return;
+
+  console.log("Historia a actualizar:", historiaSeleccionada);
+
+  const { data, error } = await supabase
+    .from('historias_clinicas')
+    .update({
+      motivo_consulta: historiaSeleccionada.motivo_consulta,
+      diagnostico: historiaSeleccionada.diagnostico,
+      tratamiento_realizado: historiaSeleccionada.tratamiento_realizado,
+      observaciones: historiaSeleccionada.observaciones
+    })
+    .eq('id', historiaSeleccionada.id)
+    .select();
+
+  console.log("Resultado update:", data);
+  console.log("Error:", error);
+
+  if (error) {
+    console.error(error);
+    toast.error("Error al actualizar la historia clínica");
+    return;
+  }
+
+  toast.success("Historia clínica actualizada correctamente");
+
+  setEditandoHistoria(false);
+};
+
+
+
+  const openFicha = async (cita: Cita) => {
+  setSelectedCita(cita);
+
+  const { data, error } = await supabase
+    .from('historias_clinicas')
+    .select('id')
+    .eq('cita_id', cita.id)
+    .maybeSingle();
+
+if (error) {
+  console.error(error);
+  setHistoriaExiste(false);
+} else {
+  setHistoriaExiste(!!data);
+
+  if (data) {
+    setHistoriaCreadaId(data.id);
+  }
+}
+
+setShowViewModal(true);
+
+};
 
   const formatFecha = (fStr: string) => {
     const [year, month, day] = fStr.split('-');
@@ -628,12 +764,21 @@ export const CitasPanel: React.FC = () => {
       La consulta fue completada correctamente.
     </div>
 
-    <button
-      onClick={() => setShowHistoriaModal(true)}
-      className="px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-cyan-600 hover:bg-cyan-700 transition-all"
-    >
-      Registrar Historia Clínica
-    </button>
+    {!historiaExiste ? (
+      <button
+        onClick={() => setShowHistoriaModal(true)}
+        className="px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-cyan-600 hover:bg-cyan-700 transition-all"
+      >
+        Registrar Historia Clínica
+      </button>
+    ) : (
+      <button
+  onClick={verHistoriaClinica}
+  className="px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition-all"
+>
+  Ver Historia Clínica
+</button>
+    )}
 
   </div>
 )}
@@ -760,6 +905,305 @@ export const CitasPanel: React.FC = () => {
     </div>
 </div>
       )}
+      {showTratamientoModal && (
+  <div className="fixed inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm flex justify-center items-center z-50 p-4">
+
+    <div className="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-2xl shadow-2xl p-6 border border-slate-200 dark:border-slate-800">
+
+      <h2 className="text-2xl font-bold mb-6 text-slate-800 dark:text-white">
+        Registrar Tratamiento
+      </h2>
+
+      <div className="space-y-4">
+
+        <div>
+          <label className="block mb-2 font-bold">
+            Nombre del tratamiento
+          </label>
+
+          <input
+            type="text"
+            value={tratamientoData.nombre_tratamiento}
+            onChange={(e)=>
+              setTratamientoData({
+                ...tratamientoData,
+                nombre_tratamiento:e.target.value
+              })
+            }
+            className="w-full border rounded-xl p-3"
+          />
+        </div>
+
+        <div>
+          <label className="block mb-2 font-bold">
+            Descripción
+          </label>
+
+          <textarea
+            rows={4}
+            value={tratamientoData.descripcion}
+            onChange={(e)=>
+              setTratamientoData({
+                ...tratamientoData,
+                descripcion:e.target.value
+              })
+            }
+            className="w-full border rounded-xl p-3"
+          />
+        </div>
+
+        <div>
+          <label className="block mb-2 font-bold">
+            Costo (S/)
+          </label>
+
+          <input
+            type="number"
+            value={tratamientoData.costo}
+            onChange={(e)=>
+              setTratamientoData({
+                ...tratamientoData,
+                costo:Number(e.target.value)
+              })
+            }
+            className="w-full border rounded-xl p-3"
+          />
+        </div>
+
+        <div className="flex justify-end gap-3">
+
+          <button
+            onClick={()=>setShowTratamientoModal(false)}
+            className="px-5 py-3 rounded-xl border"
+          >
+            Cancelar
+          </button>
+
+          <button
+          onClick={guardarTratamiento}
+            className="px-5 py-3 rounded-xl bg-cyan-600 text-white font-bold"
+          >
+            Guardar Tratamiento
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
   </div>
+)}
+{showVerHistoriaModal && historiaSeleccionada && (
+  <div className="fixed inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm flex justify-center items-center z-50 p-4">
+
+    <div className="bg-white dark:bg-slate-900 w-full max-w-3xl rounded-2xl shadow-2xl p-6 md:p-8 border border-slate-200 dark:border-slate-800">
+
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-extrabold text-slate-800 dark:text-white">
+          Historia Clínica
+        </h2>
+
+        <button
+          onClick={() => setShowVerHistoriaModal(false)}
+          className="text-2xl text-slate-400 hover:text-red-500"
+        >
+          ×
+        </button>
+      </div>
+
+      <div className="space-y-5">
+
+        <div>
+  <p className="text-sm font-bold text-slate-500">
+    Motivo de consulta
+  </p>
+
+  {editandoHistoria ? (
+
+    <textarea
+      rows={3}
+      value={historiaSeleccionada.motivo_consulta}
+      onChange={(e)=>
+        setHistoriaSeleccionada({
+          ...historiaSeleccionada,
+          motivo_consulta:e.target.value
+        })
+      }
+      className="mt-1 w-full border rounded-xl p-3"
+    />
+
+  ) : (
+
+    <div className="mt-1 p-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-white">
+      {historiaSeleccionada.motivo_consulta}
+    </div>
+
+  )}
+
+</div>
+
+        <div>
+  <p className="text-sm font-bold text-slate-500">
+    Diagnóstico
+  </p>
+
+  {editandoHistoria ? (
+
+    <textarea
+      rows={3}
+      value={historiaSeleccionada.diagnostico}
+      onChange={(e)=>
+        setHistoriaSeleccionada({
+          ...historiaSeleccionada,
+          diagnostico:e.target.value
+        })
+      }
+      className="mt-1 w-full border rounded-xl p-3"
+    />
+
+  ) : (
+
+    <div className="mt-1 p-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-white">
+      {historiaSeleccionada.diagnostico}
+    </div>
+
+  )}
+
+</div>
+
+        <div>
+  <p className="text-sm font-bold text-slate-500">
+    Tratamiento realizado
+  </p>
+
+  {editandoHistoria ? (
+
+    <textarea
+      rows={3}
+      value={historiaSeleccionada.tratamiento_realizado}
+      onChange={(e)=>
+        setHistoriaSeleccionada({
+          ...historiaSeleccionada,
+          tratamiento_realizado:e.target.value
+        })
+      }
+      className="mt-1 w-full border rounded-xl p-3"
+    />
+
+  ) : (
+
+    <div className="mt-1 p-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-white">
+      {historiaSeleccionada.tratamiento_realizado}
+    </div>
+
+  )}
+
+</div>
+
+        <div>
+  <p className="text-sm font-bold text-slate-500">
+    Observaciones
+  </p>
+
+  {editandoHistoria ? (
+
+    <textarea
+      rows={4}
+      value={historiaSeleccionada.observaciones}
+      onChange={(e)=>
+        setHistoriaSeleccionada({
+          ...historiaSeleccionada,
+          observaciones:e.target.value
+        })
+      }
+      className="mt-1 w-full border rounded-xl p-3"
+    />
+
+  ) : (
+
+    <div className="mt-1 p-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-white min-h-[90px]">
+      {historiaSeleccionada.observaciones || "Sin observaciones"}
+    </div>
+
+  )}
+
+</div>
+
+<hr className="border-slate-700 my-6" />
+
+<div className="grid grid-cols-2 gap-4 text-sm">
+
+  <div>
+    <p className="text-slate-500 font-bold">
+      ID Historia
+    </p>
+
+    <p className="text-white">
+      {historiaSeleccionada.id}
+    </p>
+  </div>
+
+  <div>
+    <p className="text-slate-500 font-bold">
+      Cita
+    </p>
+
+    <p className="text-white">
+      #{historiaSeleccionada.cita_id}
+    </p>
+  </div>
+
+</div>
+
+
+      </div>
+
+     <div className="flex justify-end gap-3 mt-8">
+
+  {editandoHistoria ? (
+
+    <>
+      <button
+        onClick={guardarCambiosHistoria}
+        className="px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold"
+      >
+        Guardar Cambios
+      </button>
+
+      <button
+        onClick={() => setEditandoHistoria(false)}
+        className="px-5 py-3 rounded-xl bg-slate-500 hover:bg-slate-400 text-white"
+      >
+        Cancelar
+      </button>
+    </>
+
+  ) : (
+
+    <button
+      onClick={() => setEditandoHistoria(true)}
+      className="px-5 py-3 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-white font-bold"
+    >
+      Editar
+    </button>
+
+  )}
+
+  <button
+    onClick={() => setShowVerHistoriaModal(false)}
+    className="px-5 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-bold"
+  >
+    Cerrar
+  </button>
+
+</div>
+
+    </div>
+
+  </div>
+)}
+  </div>
+  
   
 )}

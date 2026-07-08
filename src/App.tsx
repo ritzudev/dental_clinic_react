@@ -11,6 +11,7 @@ import { HorariosPanel } from './components/HorariosPanel';
 import { CitasPanel } from './components/CitasPanel';
 import { HistoriaClinicaPanel } from './components/HistoriaClinicaPanel';
 import { TratamientosPanel } from './components/TratamientosPanel';
+import { PagosPanel } from './components/PagosPanel';
 import { Loader2 } from 'lucide-react';
 
 export const App: React.FC = () => {
@@ -118,6 +119,7 @@ useEffect(() => {
       {view === 'citas' && <CitasPanel />}
       {view === 'historia-clinica' && <HistoriaClinicaPanel />}
       {view === 'tratamientos' && <TratamientosPanel />}
+      {view === 'pagos' && <PagosPanel />}
     </AdminLayout>
   );
 };

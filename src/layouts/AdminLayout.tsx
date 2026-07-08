@@ -8,7 +8,8 @@ import {
   Clock3, 
   Sun, 
   Moon, 
-  LogOut 
+  LogOut,
+  Wallet
 } from 'lucide-react';
 
 interface AdminLayoutProps {
@@ -93,6 +94,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
 
     { id: 'historia-clinica', label: 'Historia Clínica', icon: ShieldAlert, roles: ['admin', 'medico'] },
     { id: 'tratamientos', label: 'Tratamientos', icon: ShieldAlert, roles: ['admin', 'medico'] },
+    { id: 'pagos', label: 'Pagos', icon: Wallet, roles: ['admin', 'recepcionista'] }
   ];
 
   const filteredMenuItems = menuItems.filter(item => item.roles.includes(userRole));
