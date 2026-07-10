@@ -1,12 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Search,
   DollarSign,
   Calendar,
-  Clock3,
   Wallet
 } from "lucide-react";
-import { buscarPacientePorDni } from "../services/pagosService";
+import { buscarPacientePorDni,obtenerResumenPagos,} from "../services/pagosService";
 import RegistroPago from "./RegistroPago";
 import HistorialPagos from "./HistorialPagos";
 
@@ -18,6 +17,9 @@ export const PagosPanel: React.FC = () => {
   const [mostrarModalPaciente, setMostrarModalPaciente] = useState(false);
   const [pestanaPago, setPestanaPago] = useState<"registro" | "historial">("registro");
   const [buscando, setBuscando] = useState(false);
+  const [totalHoy, setTotalHoy] = useState(0);
+const [totalMes, setTotalMes] = useState(0);
+const [totalCobrado, setTotalCobrado] = useState(0);
 
   const buscarPaciente = async () => {
 
@@ -59,10 +61,58 @@ export const PagosPanel: React.FC = () => {
     setBuscando(false);
 
   }
+};
+
+
+
+const cargarResumen = async () => {
+
+  const pagos = await obtenerResumenPagos();
+
+  const hoy = new Date();
+
+  const hoyTexto = hoy.toISOString().split("T")[0];
+
+  const mes = hoy.getMonth();
+  const anio = hoy.getFullYear();
+
+  let sumaHoy = 0;
+  let sumaMes = 0;
+  let sumaTotal = 0;
+
+  pagos.forEach((p: any) => {
+
+    const monto = Number(p.monto);
+
+    sumaTotal += monto;
+
+    if (p.fecha_pago === hoyTexto) {
+      sumaHoy += monto;
+    }
+
+    const fecha = new Date(p.fecha_pago);
+
+    if (
+      fecha.getMonth() === mes &&
+      fecha.getFullYear() === anio
+    ) {
+      sumaMes += monto;
+    }
+
+  });
+
+  setTotalHoy(sumaHoy);
+  setTotalMes(sumaMes);
+  setTotalCobrado(sumaTotal);
 
 };
 
+useEffect(() => {
+  cargarResumen();
+}, []);
+
   return (
+    
 
     <div className="space-y-8">
 
@@ -86,7 +136,7 @@ export const PagosPanel: React.FC = () => {
 
       {/* RESUMEN */}
 
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
 
         <div className="bg-slate-900 rounded-3xl border border-slate-800 p-6">
 
@@ -102,7 +152,7 @@ export const PagosPanel: React.FC = () => {
 
               <h2 className="text-3xl font-black text-emerald-400 mt-2">
 
-                S/ 0.00
+                S/ {totalHoy.toFixed(2)}
 
               </h2>
 
@@ -128,7 +178,7 @@ export const PagosPanel: React.FC = () => {
 
               <h2 className="text-3xl font-black text-cyan-400 mt-2">
 
-                S/ 0.00
+                S/ {totalMes.toFixed(2)}
 
               </h2>
 
@@ -140,31 +190,7 @@ export const PagosPanel: React.FC = () => {
 
         </div>
 
-        <div className="bg-slate-900 rounded-3xl border border-slate-800 p-6">
-
-          <div className="flex justify-between">
-
-            <div>
-
-              <p className="text-slate-400">
-
-                Pendiente
-
-              </p>
-
-              <h2 className="text-3xl font-black text-yellow-400 mt-2">
-
-                S/ 0.00
-
-              </h2>
-
-            </div>
-
-            <Clock3 className="text-yellow-400"/>
-
-          </div>
-
-        </div>
+       
 
         <div className="bg-slate-900 rounded-3xl border border-slate-800 p-6">
 
@@ -180,7 +206,7 @@ export const PagosPanel: React.FC = () => {
 
               <h2 className="text-3xl font-black text-violet-400 mt-2">
 
-                S/ 0.00
+               S/ {totalCobrado.toFixed(2)}
 
               </h2>
 
@@ -342,8 +368,15 @@ export const PagosPanel: React.FC = () => {
   <div className="flex-1 overflow-y-auto p-8 min-h-[520px]">
 
   {pestanaPago === "registro" && (
-    <RegistroPago paciente={paciente} />
-  )}
+  <RegistroPago
+    paciente={paciente}
+    onPagoRegistrado={async () => {
+  await cargarResumen();
+  setMostrarModalPaciente(false);
+  setPestanaPago("registro");
+}}
+  />
+)}
 
   {pestanaPago === "historial" && (
     <HistorialPagos paciente={paciente} />

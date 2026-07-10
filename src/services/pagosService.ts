@@ -59,9 +59,10 @@ export const obtenerTratamientosPaciente = async (
 ): Promise<Tratamiento[]> => {
   const { data, error } = await supabase
     .from("tratamientos")
-    .select("*")
-    .eq("paciente_id", pacienteId)
-    .order("fecha_inicio", { ascending: false });
+.select("*")
+.eq("paciente_id", pacienteId)
+.eq("estado", "pendiente")
+.order("fecha_inicio", { ascending: false });
 
   if (error) {
     console.error("Error al obtener tratamientos:", error);
@@ -95,6 +96,26 @@ export const registrarPago = async (
     console.error("Error al registrar pago:", error);
     throw error;
   }
+};
+/* ==========================================================
+   FINALIZAR TRATAMIENTO
+========================================================== */
+export const finalizarTratamiento = async (
+  tratamientoId: number
+) => {
+
+  const { error } = await supabase
+    .from("tratamientos")
+    .update({
+      estado: "finalizado"
+    })
+    .eq("id", tratamientoId);
+
+  if (error) {
+    console.error("Error al finalizar tratamiento:", error);
+    throw error;
+  }
+
 };
 
 /* ==========================================================

@@ -1,19 +1,26 @@
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import {
   obtenerTratamientosPaciente,
+  registrarPago,
+  finalizarTratamiento,
 } from "../services/pagosService";
 
 interface Props {
   paciente: any;
+  onPagoRegistrado: () => void;
 }
 
-const RegistroPago: React.FC<Props> = ({ paciente }) => {
+const RegistroPago: React.FC<Props> = ({
+  paciente,
+  onPagoRegistrado,
+}) => {
 
   const [tratamientos, setTratamientos] = useState<any[]>([]);
   const [tratamientoId, setTratamientoId] = useState("");
-  const [monto, setMonto] = useState("");
   const [metodoPago, setMetodoPago] = useState("Efectivo");
   const [observaciones, setObservaciones] = useState("");
+  const [guardando, setGuardando] = useState(false);
 
   const tratamientoSeleccionado = tratamientos.find(
   (t) => t.id === Number(tratamientoId)
@@ -32,6 +39,52 @@ const RegistroPago: React.FC<Props> = ({ paciente }) => {
     cargarTratamientos();
 
   }, [paciente]);
+
+const handleRegistrarPago = async () => {
+
+  if (!tratamientoSeleccionado) return;
+
+  try {
+
+    setGuardando(true);
+
+    await registrarPago(
+      paciente.id,
+      tratamientoSeleccionado.id,
+      Number(tratamientoSeleccionado.costo),
+      metodoPago,
+      observaciones
+    );
+
+    await finalizarTratamiento(tratamientoSeleccionado.id);
+
+    toast.success("Pago registrado correctamente.");
+
+    setTratamientoId("");
+    setMetodoPago("Efectivo");
+    setObservaciones("");
+
+    const lista = await obtenerTratamientosPaciente(paciente.id);
+    setTratamientos(lista);
+
+    setTimeout(() => {
+      onPagoRegistrado();
+    }, 1000);
+
+  } catch (error: any) {
+
+    console.error(error);
+
+    toast.error("No se pudo registrar el pago.");
+
+  } finally {
+
+    setGuardando(false);
+
+  }
+
+};
+
 
   return (
 
@@ -59,19 +112,13 @@ const RegistroPago: React.FC<Props> = ({ paciente }) => {
          No existen tratamientos registrados
         </option>
         )}
-        {tratamientos.map((t) => (
-        <option key={t.id} value={t.id}>
-        {t.nombre_tratamiento}
-        </option>
-        ))}
 
-        {tratamientos.map((t) => (
 
-          <option key={t.id} value={t.id}>
-            {t.nombre_tratamiento}
-          </option>
-
-        ))}
+{tratamientos.map((t) => (
+  <option key={t.id} value={t.id}>
+    {t.nombre_tratamiento}
+  </option>
+))}
 
       </select>
 {tratamientoSeleccionado && (
@@ -125,25 +172,7 @@ const RegistroPago: React.FC<Props> = ({ paciente }) => {
 )}
     </div>
 
-    {/* Costo */}
-
-    <div>
-
-      <label className="block text-sm font-semibold text-slate-300 mb-2">
-        Monto a pagar
-      </label>
-
-      <input
-        type="number"
-        min={0}
-        step="0.01"
-        value={monto}
-        onChange={(e) => setMonto(e.target.value)}
-        placeholder="Ingrese el monto"
-        className="w-full bg-slate-950 border border-slate-700 rounded-2xl px-4 py-3 text-white"
-      />
-
-    </div>
+    
 
     {/* Método */}
 
@@ -188,12 +217,13 @@ const RegistroPago: React.FC<Props> = ({ paciente }) => {
 
     {/* Botón */}
 
-    <button
-    disabled={!tratamientoId}
-     className="w-full bg-cyan-600 hover:bg-cyan-500 disabled:bg-slate-700 disabled:cursor-not-allowed rounded-2xl py-4 text-white font-bold text-lg transition"
-    >
-      Registrar Pago
-    </button>
+   <button
+  onClick={handleRegistrarPago}
+  disabled={!tratamientoId || guardando}
+  className="w-full bg-cyan-600 hover:bg-cyan-500 disabled:bg-slate-700 disabled:cursor-not-allowed rounded-2xl py-4 text-white font-bold text-lg transition"
+>
+  {guardando ? "Registrando..." : "Registrar Pago"}
+</button>
 
   </div>
 
