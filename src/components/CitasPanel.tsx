@@ -765,20 +765,31 @@ setShowViewModal(true);
     </div>
 
     {!historiaExiste ? (
-      <button
-        onClick={() => setShowHistoriaModal(true)}
-        className="px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-cyan-600 hover:bg-cyan-700 transition-all"
-      >
-        Registrar Historia Clínica
-      </button>
-    ) : (
-      <button
-  onClick={verHistoriaClinica}
-  className="px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition-all"
->
-  Ver Historia Clínica
-</button>
-    )}
+
+  <button
+    onClick={() => setShowHistoriaModal(true)}
+    className="px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-cyan-600 hover:bg-cyan-700 transition-all"
+  >
+    Registrar Historia Clínica
+  </button>
+
+) : (
+
+  <div className="flex flex-col gap-2">
+
+    <div className="text-sm font-semibold text-emerald-500">
+      ✓ Historia clínica registrada
+    </div>
+
+    <button
+      className="px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 transition-all"
+    >
+      Abrir Historial Clínico
+    </button>
+
+  </div>
+
+)}
 
   </div>
 )}
@@ -994,7 +1005,7 @@ setShowViewModal(true);
 
   </div>
 )}
-{showVerHistoriaModal && historiaSeleccionada && (
+{/*showVerHistoriaModal && historiaSeleccionada && (
   <div className="fixed inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm flex justify-center items-center z-50 p-4">
 
     <div className="bg-white dark:bg-slate-900 w-full max-w-3xl rounded-2xl shadow-2xl p-6 md:p-8 border border-slate-200 dark:border-slate-800">
@@ -1202,7 +1213,7 @@ setShowViewModal(true);
     </div>
 
   </div>
-)}
+)*/}
   </div>
   
   

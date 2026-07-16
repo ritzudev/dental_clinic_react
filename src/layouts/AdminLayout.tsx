@@ -93,6 +93,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
     { id: 'citas', label: 'Citas', icon: CalendarRange, roles: ['admin', 'recepcionista', 'medico'] },
 
     { id: 'historia-clinica', label: 'Historia Clínica', icon: ShieldAlert, roles: ['admin', 'medico'] },
+    { id: 'plan-tratamiento', label: 'Plan de Tratamiento', icon: ShieldAlert, roles: ['admin', 'medico'] },
     { id: 'tratamientos', label: 'Tratamientos', icon: ShieldAlert, roles: ['admin', 'medico'] },
     { id: 'pagos', label: 'Pagos', icon: Wallet, roles: ['admin', 'recepcionista'] }
   ];

@@ -11,6 +11,7 @@ import { HorariosPanel } from './components/HorariosPanel';
 import { CitasPanel } from './components/CitasPanel';
 import { HistoriaClinicaPanel } from './components/HistoriaClinicaPanel';
 import { TratamientosPanel } from './components/TratamientosPanel';
+import { PlanTratamientoPanel } from './components/PlanTratamientoPanel';
 import { PagosPanel } from './components/PagosPanel';
 import { Loader2 } from 'lucide-react';
 
@@ -109,6 +110,8 @@ useEffect(() => {
     );
   }
 
+
+  console.log("VIEW ACTUAL:", view);
   // Rutas privadas (Administración) envueltas en AdminLayout
   return (
     <AdminLayout currentView={view} setView={setView}>
@@ -118,6 +121,7 @@ useEffect(() => {
       {view === 'horarios' && <HorariosPanel />}
       {view === 'citas' && <CitasPanel />}
       {view === 'historia-clinica' && <HistoriaClinicaPanel />}
+      {view === 'plan-tratamiento' && <PlanTratamientoPanel />}
       {view === 'tratamientos' && <TratamientosPanel />}
       {view === 'pagos' && <PagosPanel />}
     </AdminLayout>
