@@ -54,13 +54,16 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, setView }) => {
             .select('rol')
             .eq('id', data.user.id)
             .single();
+            console.log("ID AUTH:", data.user.id);
+console.log("PERFIL:", perfilData);
+console.log("ERROR:", perfilError);
           
           if (!perfilError && perfilData) {
             userRole = perfilData.rol;
           } else {
             // Fallback a user_metadata si está disponible
             userRole = data.user.user_metadata?.rol || 'admin';
-          }
+          }console.log("ROL FINAL:", userRole);
         } catch (e) {
           console.error('Error al consultar la tabla perfiles:', e);
         }

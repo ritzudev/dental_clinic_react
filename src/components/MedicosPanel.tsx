@@ -10,6 +10,7 @@ interface Medico {
   sexo: string;
   telefono: string;
   correo_profesional: string;
+  contrasena?: string;
   especialidades: string[];
   estado?: string;
   created_at?: string;
@@ -47,6 +48,7 @@ export const MedicosPanel: React.FC = () => {
     sexo: 'Masculino',
     telefono: '',
     correo_profesional: '',
+    contrasena: '',
     especialidades: [],
   });
 
@@ -100,19 +102,28 @@ export const MedicosPanel: React.FC = () => {
     setSubmitMessage('');
 
     try {
-      const { error } = await supabase
-        .from('medicos')
-        .insert([
-          {
-            ...newMedico,
-            estado: 'Activo'
-          }
-        ]);
+      const { data, error } = await supabase.functions.invoke('crear-medico', {
+  body: {
+  nombres: newMedico.nombres,
+  apellidos: newMedico.apellidos,
+  dni: newMedico.dni,
+  sexo: newMedico.sexo,
+  telefono: newMedico.telefono,
+  correo_profesional: newMedico.correo_profesional,
+  contrasena: newMedico.contrasena,
+  especialidades: newMedico.especialidades,
+},
+});
 
-      if (error) {
-        setSubmitError(error.message);
-        return;
-      }
+if (error) {
+  setSubmitError(error.message);
+  return;
+}
+
+if (!data.ok) {
+  setSubmitError(data.error);
+  return;
+}
 
       setSubmitMessage('¡Médico registrado con éxito!');
       
@@ -123,6 +134,7 @@ export const MedicosPanel: React.FC = () => {
         sexo: 'Masculino',
         telefono: '',
         correo_profesional: '',
+        contrasena: '',
         especialidades: [],
       });
 
@@ -407,6 +419,24 @@ export const MedicosPanel: React.FC = () => {
                   <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Correo Profesional</label>
                   <input value={newMedico.correo_profesional} onChange={(e) => setNewMedico({...newMedico, correo_profesional: e.target.value})} type="email" className="w-full border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:text-white" />
                 </div>
+                <div>
+  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+    Contraseña *
+  </label>
+
+  <input
+    value={newMedico.contrasena || ""}
+    onChange={(e) =>
+      setNewMedico({
+        ...newMedico,
+        contrasena: e.target.value,
+      })
+    }
+    type="password"
+    required
+    className="w-full border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:text-white"
+  />
+</div>
               </div>
 
               {/* ESPECIALIDADES */}

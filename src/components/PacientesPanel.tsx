@@ -19,7 +19,7 @@ interface Paciente {
   created_at?: string;
 }
 
-export const PacientesPanel: React.FC = () => {
+export const PacientesPanel: React.FC<{ setView: (v: string) => void }> = ({ setView }) => {
   const [pacientes, setPacientes] = useState<Paciente[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -228,14 +228,30 @@ export const PacientesPanel: React.FC = () => {
                         {p.estado || 'Activo'}
                       </span>
                     </td>
-                    <td className="p-4 pr-6 text-center">
-                      <button 
-                        onClick={() => openFicha(p)} 
-                        className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-blue-900 hover:bg-blue-800 dark:bg-cyan-500 dark:hover:bg-cyan-600 transition shadow-md cursor-pointer flex items-center gap-1 mx-auto"
-                      >
-                        <FolderOpen className="w-3.5 h-3.5" /> Ficha
-                      </button>
-                    </td>
+                   <td className="p-4 pr-6 text-center">
+  <div className="flex justify-center gap-2">
+
+    {/* FICHA */}
+    <button 
+      onClick={() => openFicha(p)} 
+      className="px-3 py-2 rounded-xl text-xs font-bold text-white bg-blue-900 hover:bg-blue-800 dark:bg-cyan-500 dark:hover:bg-cyan-600 transition shadow-md cursor-pointer flex items-center gap-1"
+    >
+      <FolderOpen className="w-3.5 h-3.5" /> Ficha
+    </button>
+
+    {/* ODONTO */}
+    <button
+      onClick={() => {
+        localStorage.setItem('paciente-id', String(p.id));
+        setView('paciente-detalle');
+      }}
+      className="px-3 py-2 rounded-xl text-xs font-bold text-white bg-green-600 hover:bg-green-700 transition shadow-md cursor-pointer"
+    >
+      Odonto
+    </button>
+
+  </div>
+</td>
                   </tr>
                 ))
               )}

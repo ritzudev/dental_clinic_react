@@ -65,9 +65,8 @@ const [tratamientoData, setTratamientoData] = useState({
 const [historiaExiste, setHistoriaExiste] = useState(false);
 
 const [historiaCreadaId, setHistoriaCreadaId] = useState<number | null>(null);
-const [historiaSeleccionada, setHistoriaSeleccionada] = useState<any>(null);
-const [showVerHistoriaModal, setShowVerHistoriaModal] = useState(false);
-const [editandoHistoria, setEditandoHistoria] = useState(false);
+
+
 
 
   // Formulario nueva cita
@@ -311,55 +310,6 @@ const guardarTratamiento = async () => {
   }
 };
 
-const verHistoriaClinica = async () => {
-  if (!historiaCreadaId) return;
-
-  const { data, error } = await supabase
-    .from('historias_clinicas')
-    .select('*')
-    .eq('id', historiaCreadaId)
-    .single();
-
-  if (error) {
-    console.error(error);
-    toast.error('No se pudo cargar la historia clínica');
-    return;
-  }
-
-  setHistoriaSeleccionada(data);
-  setEditandoHistoria(false);
-  setShowVerHistoriaModal(true);
-};
-
-const guardarCambiosHistoria = async () => {
-  if (!historiaSeleccionada) return;
-
-  console.log("Historia a actualizar:", historiaSeleccionada);
-
-  const { data, error } = await supabase
-    .from('historias_clinicas')
-    .update({
-      motivo_consulta: historiaSeleccionada.motivo_consulta,
-      diagnostico: historiaSeleccionada.diagnostico,
-      tratamiento_realizado: historiaSeleccionada.tratamiento_realizado,
-      observaciones: historiaSeleccionada.observaciones
-    })
-    .eq('id', historiaSeleccionada.id)
-    .select();
-
-  console.log("Resultado update:", data);
-  console.log("Error:", error);
-
-  if (error) {
-    console.error(error);
-    toast.error("Error al actualizar la historia clínica");
-    return;
-  }
-
-  toast.success("Historia clínica actualizada correctamente");
-
-  setEditandoHistoria(false);
-};
 
 
 

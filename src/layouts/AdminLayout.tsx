@@ -62,8 +62,22 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
       }
 
       setUserEmail(session.user.email || '');
-      const savedRole = localStorage.getItem('user-role') || 'admin';
-      setUserRole(savedRole);
+
+const { data: perfilData, error: perfilError } = await supabase
+  .from("perfiles")
+  .select("rol")
+  .eq("id", session.user.id)
+  .single();
+
+console.log("PERFIL:", perfilData);
+
+const savedRole = !perfilError && perfilData
+  ? perfilData.rol
+  : "admin";
+
+setUserRole(savedRole);
+
+console.log("SAVED ROLE:", savedRole);
 
       // Blindaje de seguridad inmediata para URLs prohibidas
       const currentPath = currentView;
@@ -76,6 +90,11 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
 
     loadUserAndValidate();
   }, [currentView, setView]);
+
+useEffect(() => {
+  console.log("ESTADO userRole:", userRole);
+}, [userRole]);
+
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();

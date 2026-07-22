@@ -15,6 +15,10 @@ import { PlanTratamientoPanel } from './components/PlanTratamientoPanel';
 import { PagosPanel } from './components/PagosPanel';
 import { Loader2 } from 'lucide-react';
 
+
+import PacienteDetalle from './pages/PacienteDetalle';
+
+
 export const App: React.FC = () => {
   const [view, setView] = useState<string>('loading');
   const [sessionChecked, setSessionChecked] = useState(false);
@@ -51,7 +55,7 @@ useEffect(() => {
   if (sessionChecked) {
     if (session) {
       const savedView =
-        localStorage.getItem('current-view') || 'dashboard';
+  localStorage.getItem('current-view') || 'dashboard';
 
       setView(savedView);
     } else {
@@ -116,7 +120,7 @@ useEffect(() => {
   return (
     <AdminLayout currentView={view} setView={setView}>
       {view === 'dashboard' && <DashboardPanel setView={setView} />}
-      {view === 'pacientes' && <PacientesPanel />}
+      {view === 'pacientes' && <PacientesPanel setView={setView} />}
       {view === 'medicos' && <MedicosPanel />}
       {view === 'horarios' && <HorariosPanel />}
       {view === 'citas' && <CitasPanel />}
@@ -124,6 +128,10 @@ useEffect(() => {
       {view === 'plan-tratamiento' && <PlanTratamientoPanel />}
       {view === 'tratamientos' && <TratamientosPanel />}
       {view === 'pagos' && <PagosPanel />}
+
+
+      {view === 'paciente-detalle' && <PacienteDetalle />}
+
     </AdminLayout>
   );
 };
