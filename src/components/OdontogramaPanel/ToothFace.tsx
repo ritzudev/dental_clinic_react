@@ -6,7 +6,7 @@ interface Props {
 
 export default function ToothFace({
   points,
-  color = "white",
+  color = "transparent",
   onClick,
 }: Props) {
   return (
@@ -15,10 +15,12 @@ export default function ToothFace({
       fill={color}
       stroke="#555"
       strokeWidth="1.3"
-      onClick={onClick}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick?.();
+      }}
       style={{
         cursor: "pointer",
-        transition: ".2s",
       }}
     />
   );

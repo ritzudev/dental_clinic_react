@@ -6,6 +6,10 @@ interface Props {
   left?: string;
   right?: string;
   center?: string;
+
+  onFaceClick?: (
+    face: "top" | "bottom" | "left" | "right" | "center"
+  ) => void;
 }
 
 export default function ToothSurfaces({
@@ -14,38 +18,44 @@ export default function ToothSurfaces({
   left = "transparent",
   right = "transparent",
   center = "transparent",
+  onFaceClick,
 }: Props) {
   return (
     <>
       {/* Superior */}
       <ToothFace
-        points="40,20 60,20 55,35 45,35"
-        color={top}
-      />
+  points="40,20 60,20 55,35 45,35"
+  color={top}
+  onClick={() => onFaceClick?.("top")}
+/>
 
       {/* Inferior */}
       <ToothFace
-        points="45,65 55,65 60,80 40,80"
-        color={bottom}
-      />
+  points="45,65 55,65 60,80 40,80"
+  color={bottom}
+  onClick={() => onFaceClick?.("bottom")}
+/>
 
       {/* Izquierda */}
       <ToothFace
-        points="25,35 45,35 45,65 25,55"
-        color={left}
-      />
+  points="25,35 45,35 45,65 25,55"
+  color={left}
+  onClick={() => onFaceClick?.("left")}
+/>
 
       {/* Derecha */}
       <ToothFace
-        points="55,35 75,35 75,55 55,65"
-        color={right}
-      />
+  points="55,35 75,35 75,55 55,65"
+  color={right}
+  onClick={() => onFaceClick?.("right")}
+/>
 
       {/* Centro */}
       <ToothFace
-        points="45,35 55,35 55,65 45,65"
-        color={center}
-      />
+  points="45,35 55,35 55,65 45,65"
+  color={center}
+  onClick={() => onFaceClick?.("center")}
+/>
     </>
   );
 }

@@ -6,9 +6,13 @@ export interface ToothProps {
   onClick: (e: React.MouseEvent<HTMLDivElement>) => void;
 }
 
-export interface ToothPopupProps {
+export interface ToothProps {
   numero: number;
   estado?: Estado;
-  onGuardar: (estado: Estado) => void;
-  onCerrar: () => void;
+
+  onFaceClick: (
+    numero: number,
+    face: "top" | "right" | "bottom" | "left" | "center",
+    e: React.MouseEvent
+  ) => void;
 }

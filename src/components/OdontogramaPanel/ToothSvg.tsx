@@ -9,8 +9,11 @@ export default function ToothSvg({
   switch (tipo) {
 
     case "incisivo":
-      return (
-        <svg viewBox="0 0 100 140" width="40" height="56">
+  return (
+    <svg viewBox="0 0 100 140" width="40" height="56">
+
+      <defs>
+        <clipPath id="incisivoClip">
           <path
             d="
             M35 10
@@ -23,13 +26,34 @@ export default function ToothSvg({
             Q30 68 26 42
             Q22 18 35 10 Z
             "
-            fill="currentColor"
-            stroke="#555"
-            strokeWidth="2"
           />
-          {children}
-        </svg>
-      );
+        </clipPath>
+      </defs>
+
+      <g clipPath="url(#incisivoClip)">
+        {children}
+      </g>
+
+      <path
+        d="
+        M35 10
+        Q50 2 65 10
+        Q78 18 74 42
+        Q70 68 60 86
+        L55 126
+        Q50 134 45 126
+        L40 86
+        Q30 68 26 42
+        Q22 18 35 10 Z
+        "
+        fill="currentColor"
+        stroke="#555"
+        strokeWidth="2"
+      />
+
+    </svg>
+  );
+
 
     case "canino":
       return (

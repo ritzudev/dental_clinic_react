@@ -1,21 +1,31 @@
 import type { Estado } from "./ToothTypes";
-import { getColor } from "./ToothUtils";
-import ToothSvg from "./ToothSvg";
-import ToothSurfaces from "./ToothSurfaces";
+
+
+import RealTooth from "./RealTooth";
+
+type Caras = {
+  top?: Estado;
+  right?: Estado;
+  bottom?: Estado;
+  left?: Estado;
+  center?: Estado;
+};
 
 interface ToothProps {
   numero: number;
-  estado?: Estado;
-  onClick: (
+  estado?: Caras;
+
+  onFaceClick: (
     numero: number,
-    e: React.MouseEvent<HTMLDivElement>
+    face: "top" | "right" | "bottom" | "left" | "center",
+    e: React.MouseEvent
   ) => void;
 }
 
 export default function Tooth({
   numero,
   estado,
-  onClick,
+  onFaceClick,
 }: ToothProps) {
   const getTipo = (numero: number) => {
   const n = numero % 10;
@@ -32,7 +42,7 @@ export default function Tooth({
 const tipo = getTipo(numero);
   return (
     <div
-      onClick={(e) => onClick(numero, e)}
+      
       className="
 flex
 flex-col
@@ -53,7 +63,6 @@ hover:-translate-y-1
 <div
   className={`
     relative
-    ${getColor(estado)}
     transition-all
     duration-300
   `}
@@ -61,11 +70,68 @@ hover:-translate-y-1
     filter: "drop-shadow(0px 2px 3px rgba(0,0,0,.18))",
   }}
 >
-  <ToothSvg tipo={tipo}>
-  <ToothSurfaces
-  center="red"
+<RealTooth
+  tipo={tipo}
+  colors={{
+    top:
+      estado?.top === "caries"
+        ? "#ef4444"
+        : estado?.top === "restaurado"
+        ? "#3b82f6"
+        : estado?.top === "extraido"
+        ? "#6b7280"
+        : estado?.top === "sano"
+        ? "#22c55e"
+        : undefined,
+
+    left:
+      estado?.left === "caries"
+        ? "#ef4444"
+        : estado?.left === "restaurado"
+        ? "#3b82f6"
+        : estado?.left === "extraido"
+        ? "#6b7280"
+        : estado?.left === "sano"
+        ? "#22c55e"
+        : undefined,
+
+    center:
+      estado?.center === "caries"
+        ? "#ef4444"
+        : estado?.center === "restaurado"
+        ? "#3b82f6"
+        : estado?.center === "extraido"
+        ? "#6b7280"
+        : estado?.center === "sano"
+        ? "#22c55e"
+        : undefined,
+
+    right:
+      estado?.right === "caries"
+        ? "#ef4444"
+        : estado?.right === "restaurado"
+        ? "#3b82f6"
+        : estado?.right === "extraido"
+        ? "#6b7280"
+        : estado?.right === "sano"
+        ? "#22c55e"
+        : undefined,
+
+    bottom:
+      estado?.bottom === "caries"
+        ? "#ef4444"
+        : estado?.bottom === "restaurado"
+        ? "#3b82f6"
+        : estado?.bottom === "extraido"
+        ? "#6b7280"
+        : estado?.bottom === "sano"
+        ? "#22c55e"
+        : undefined,
+  }}
+  onFaceClick={(face, e) => {
+    onFaceClick(numero, face, e);
+  }}
 />
-</ToothSvg>
 </div>
 
 
