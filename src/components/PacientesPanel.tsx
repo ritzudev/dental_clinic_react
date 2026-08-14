@@ -24,6 +24,10 @@ export const PacientesPanel: React.FC<{ setView: (v: string) => void }> = ({ set
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
 
+const [userRole, setUserRole] = useState("");
+const [medicoId, setMedicoId] = useState<number | null>(null);
+
+
   // Modales
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
@@ -49,16 +53,84 @@ export const PacientesPanel: React.FC<{ setView: (v: string) => void }> = ({ set
   const [submitError, setSubmitError] = useState('');
 
   useEffect(() => {
-    fetchPacientes();
+     inicializar();
   }, []);
 
-  const fetchPacientes = async () => {
+
+const inicializar = async () => {
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return;
+
+  // obtener rol
+  const { data: perfil } = await supabase
+    .from("perfiles")
+    .select("rol")
+    .eq("id", user.id)
+    .single();
+
+  if (!perfil) return;
+
+  setUserRole(perfil.rol);
+
+  if (perfil.rol === "medico") {
+
+    const { data: medico } = await supabase
+      .from("medicos")
+      .select("id")
+      .eq("auth_user_id", user.id)
+      .single();
+
+    if (medico) {
+      setMedicoId(medico.id);
+      fetchPacientes("medico", medico.id);
+    }
+
+  } else {
+
+    fetchPacientes(perfil.rol);
+
+  }
+
+};
+
+
+
+  const fetchPacientes = async (
+  rol?: string,
+  medicoId?: number
+) => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('pacientes')
-        .select('*')
-        .order('id', { ascending: false });
+      let query = supabase
+  .from("pacientes")
+  .select("*");
+
+if (rol === "medico" && medicoId) {
+
+  const { data: citas } = await supabase
+    .from("citas")
+    .select("paciente_id")
+    .eq("medico_id", medicoId);
+
+  const ids = citas?.map(c => c.paciente_id) ?? [];
+
+  if (ids.length === 0) {
+    setPacientes([]);
+    setIsLoading(false);
+    return;
+  }
+
+  query = query.in("id", ids);
+
+}
+
+const { data, error } = await query.order("id", {
+  ascending: false,
+});
 
       if (error) {
         console.error('Error al cargar pacientes de Supabase:', error);
@@ -115,7 +187,10 @@ export const PacientesPanel: React.FC<{ setView: (v: string) => void }> = ({ set
         direccion: '',
       });
 
-      await fetchPacientes();
+      await fetchPacientes(
+    userRole,
+    medicoId ?? undefined
+);
 
       setTimeout(() => {
         setShowCreateModal(false);
@@ -158,13 +233,15 @@ export const PacientesPanel: React.FC<{ setView: (v: string) => void }> = ({ set
           </p>
         </div>
 
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="inline-flex justify-center items-center gap-2 py-3 px-5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 shadow-md shadow-cyan-500/10 active:scale-[0.98] transition-all cursor-pointer"
-        >
-          <UserPlus className="w-4 h-4" />
-          Registrar Paciente
-        </button>
+      {userRole !== "medico" && (
+  <button
+    onClick={() => setShowCreateModal(true)}
+    className="inline-flex justify-center items-center gap-2 py-3 px-5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 shadow-md shadow-cyan-500/10 active:scale-[0.98] transition-all cursor-pointer"
+  >
+    <UserPlus className="w-4 h-4" />
+    Registrar Paciente
+  </button>
+)}
       </div>
 
       {/* BUSCADOR */}

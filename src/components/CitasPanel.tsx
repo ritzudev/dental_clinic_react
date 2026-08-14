@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import { Search, CalendarPlus, Loader2 } from 'lucide-react';
@@ -92,11 +93,37 @@ const [historiaCreadaId, setHistoriaCreadaId] = useState<number | null>(null);
     setIsLoading(true);
     try {
       // 1. Cargar citas con relaciones
-      const { data: citasData, error: citasError } = await supabase
-        .from('citas')
-        .select('*, pacientes(*), medicos(*)')
-        .order('fecha', { ascending: false })
-        .order('hora', { ascending: false });
+      let query = supabase
+  .from("citas")
+  .select(`
+      *,
+      pacientes(*),
+      medicos(*)
+  `);
+
+const {
+  data: { user },
+} = await supabase.auth.getUser();
+
+let medicoId: number | null = null;
+
+if (user) {
+  const { data: medico } = await supabase
+    .from("medicos")
+    .select("id")
+    .eq("auth_user_id", user.id)   // <-- usa el mismo campo que usaste en PacientesPanel
+    .maybeSingle();
+
+  medicoId = medico?.id ?? null;
+}
+
+if (medicoId) {
+  query = query.eq("medico_id", medicoId);
+}
+const { data: citasData, error: citasError } =
+  await query
+    .order("fecha", { ascending: false })
+    .order("hora", { ascending: false });
 
       if (citasError) {
         console.error('Error al cargar citas de Supabase:', citasError);
@@ -114,11 +141,18 @@ const [historiaCreadaId, setHistoriaCreadaId] = useState<number | null>(null);
       setPacientes(pacientesData || []);
 
       // 3. Cargar médicos activos
-      const { data: medicosData } = await supabase
-        .from('medicos')
-        .select('id, nombres, apellidos, especialidades')
-        .eq('estado', 'Activo')
-        .order('apellidos', { ascending: true });
+      let medicosQuery = supabase
+  .from("medicos")
+  .select("id, nombres, apellidos, especialidades")
+  .eq("estado", "Activo");
+
+if (medicoId) {
+  medicosQuery = medicosQuery.eq("id", medicoId);
+}
+
+const { data: medicosData } = await medicosQuery.order("apellidos", {
+  ascending: true,
+});
       
       setMedicos(medicosData || []);
 
@@ -309,7 +343,6 @@ const guardarTratamiento = async () => {
     toast.error('Error al registrar tratamiento');
   }
 };
-
 
 
 
@@ -731,11 +764,7 @@ setShowViewModal(true);
       ✓ Historia clínica registrada
     </div>
 
-    <button
-      className="px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 transition-all"
-    >
-      Abrir Historial Clínico
-    </button>
+   
 
   </div>
 

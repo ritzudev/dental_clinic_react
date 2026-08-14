@@ -83,9 +83,7 @@ console.log("SAVED ROLE:", savedRole);
       const currentPath = currentView;
       if (currentPath === 'medicos' && savedRole !== 'admin') {
         setView('dashboard');
-      } else if (currentPath === 'pacientes' && savedRole === 'medico') {
-        setView('dashboard');
-      }
+      } 
     };
 
     loadUserAndValidate();
@@ -106,7 +104,7 @@ useEffect(() => {
   // Definir elementos de menú permitidos por rol
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['admin', 'recepcionista', 'medico'] },
-    { id: 'pacientes', label: 'Pacientes', icon: Users, roles: ['admin', 'recepcionista'] },
+    { id: 'pacientes', label: 'Pacientes', icon: Users, roles: ['admin' ,'recepcionista', 'medico'] },
     { id: 'medicos', label: 'Médicos', icon: ShieldAlert, roles: ['admin'] },
     { id: 'horarios', label: 'Horarios', icon: Clock3, roles: ['admin', 'recepcionista', 'medico'] },
     { id: 'citas', label: 'Citas', icon: CalendarRange, roles: ['admin', 'recepcionista', 'medico'] },
