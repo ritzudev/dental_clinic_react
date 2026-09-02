@@ -48,6 +48,9 @@ export const PlanTratamientoPanel = () => {
 
   const [costoTotal, setCostoTotal] = useState(0);
 
+const [tituloPlan, setTituloPlan] = useState("");
+
+
   const [consultas, setConsultas] = useState<Consulta[]>(
     crearConsultas(4)
   );
@@ -268,65 +271,187 @@ export const PlanTratamientoPanel = () => {
 
   const guardarPlan = async () => {
 
-    if (!pacienteSeleccionado) {
+  // ==========================================
+  // VALIDACIONES
+  // ==========================================
 
-      setMensaje(
-        "Primero debes seleccionar un paciente."
-      );
+  if (!pacienteSeleccionado) {
+    setMensaje("Primero debes seleccionar un paciente.");
+    return;
+  }
 
-      return;
-    }
+  if (!tituloPlan.trim()) {
+    setMensaje("Ingresa un título para el plan de tratamiento.");
+    return;
+  }
 
-    if (consultas.some(
+  if (
+    consultas.some(
       (consulta) =>
         !consulta.procedimiento.trim()
-    )) {
+    )
+  ) {
+    setMensaje(
+      "Completa el procedimiento de todas las consultas."
+    );
+    return;
+  }
 
-      setMensaje(
-        "Completa el procedimiento de todas las consultas."
+
+  setGuardando(true);
+  setMensaje("");
+
+
+  try {
+
+    // ==========================================
+    // 1. OBTENER USUARIO AUTENTICADO
+    // ==========================================
+
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+
+    if (userError || !user) {
+      throw new Error(
+        "No se pudo obtener el usuario autenticado."
       );
-
-      return;
     }
 
-    setGuardando(true);
+console.log("USUARIO AUTENTICADO:", user);
+console.log("USER ID:", user.id);
+console.log("USER EMAIL:", user.email);
+    // ==========================================
+    // 2. BUSCAR EL MÉDICO VINCULADO
+    // ==========================================
 
-    setMensaje("");
+    const {
+      data: medico,
+      error: medicoError,
+    } = await supabase
+      .from("medicos")
+      .select("id")
+      .eq("auth_user_id", user.id)
+      .single();
 
-    try {
 
-      /*
-       * ESTA PARTE LA CONECTAREMOS CON SUPABASE
-       * CUANDO CREEMOS LAS TABLAS DEL PLAN.
-       *
-       * Por ahora comprobamos que todo esté correcto.
-       */
+    if (medicoError || !medico) {
+      console.error("Error médico:", medicoError);
 
-      console.log("Paciente:", pacienteSeleccionado);
-
-      console.log("Costo total:", costoTotal);
-
-      console.log("Consultas:", consultas);
-
-      setMensaje(
-        "Plan de tratamiento preparado correctamente."
+      throw new Error(
+        "No se encontró un médico vinculado a este usuario."
       );
-
-    } catch (error) {
-
-      console.error(error);
-
-      setMensaje(
-        "Ocurrió un error al guardar el plan."
-      );
-
-    } finally {
-
-      setGuardando(false);
-
     }
-  };
 
+
+    // ==========================================
+    // 3. CREAR PLAN DE TRATAMIENTO
+    // ==========================================
+
+    const {
+      data: plan,
+      error: planError,
+    } = await supabase
+      .from("planes_tratamiento")
+      .insert({
+        paciente_id: pacienteSeleccionado.id,
+        medico_id: medico.id,
+        titulo: tituloPlan.trim(),
+        cantidad_consultas: consultas.length,
+        costo_total: totalConsultas,
+        estado: "pendiente",
+      })
+      .select()
+      .single();
+
+
+    if (planError || !plan) {
+      console.error(
+        "Error guardando plan:",
+        planError
+      );
+
+      throw new Error(
+        planError?.message ||
+        "No se pudo guardar el plan."
+      );
+    }
+
+
+    // ==========================================
+    // 4. PREPARAR CONSULTAS
+    // ==========================================
+
+    const consultasParaGuardar = consultas.map(
+      (consulta) => ({
+        plan_id: plan.id,
+        numero_consulta: consulta.id,
+        descripcion: consulta.procedimiento.trim(),
+        costo: Number(consulta.costo),
+        estado: "pendiente",
+        observaciones:
+          consulta.observaciones.trim() || null,
+      })
+    );
+
+
+    // ==========================================
+    // 5. GUARDAR CONSULTAS
+    // ==========================================
+
+    const {
+      error: consultasError,
+    } = await supabase
+      .from("plan_consultas")
+      .insert(consultasParaGuardar);
+
+
+    if (consultasError) {
+
+      console.error(
+        "Error guardando consultas:",
+        consultasError
+      );
+
+      throw new Error(
+        consultasError.message ||
+        "No se pudieron guardar las consultas."
+      );
+    }
+
+
+    // ==========================================
+    // 6. ÉXITO
+    // ==========================================
+
+    setMensaje(
+      "Plan de tratamiento guardado correctamente."
+    );
+
+
+  } catch (error) {
+
+    console.error(
+      "Error al guardar plan:",
+      error
+    );
+
+    setMensaje(
+      error instanceof Error
+        ? error.message
+        : "Ocurrió un error al guardar el plan."
+    );
+
+
+  } finally {
+
+    setGuardando(false);
+
+  }
+
+};
 
   // =====================================================
   // INTERFAZ
@@ -565,6 +690,31 @@ export const PlanTratamientoPanel = () => {
               </p>
 
             </div>
+            <div className="mt-5">
+  <label className="text-sm text-slate-400">
+    Título del plan de tratamiento
+  </label>
+
+  <input
+    type="text"
+    value={tituloPlan}
+    onChange={(e) => setTituloPlan(e.target.value)}
+    placeholder="Ej. Tratamiento integral odontológico"
+    className="
+      mt-2
+      w-full
+      bg-slate-950
+      border
+      border-slate-700
+      rounded-xl
+      px-4
+      py-3
+      text-white
+      outline-none
+      focus:border-cyan-500
+    "
+  />
+</div>
 
 
             <div className="
@@ -579,38 +729,32 @@ export const PlanTratamientoPanel = () => {
 
               {/* CANTIDAD */}
 
-              <div>
+             <div className="flex flex-col gap-2">
+  <label className="text-sm text-slate-400">
+    Cantidad de consultas
+  </label>
 
-                <label className="text-sm text-slate-400">
-                  Cantidad de consultas
-                </label>
-
-                <input
-                  type="number"
-                  min={1}
-                  max={20}
-                  value={cantidadConsultas}
-                  onChange={(e) =>
-                    cambiarCantidadConsultas(
-                      Number(e.target.value)
-                    )
-                  }
-                  className="
-                    mt-2
-                    w-full
-                    sm:w-40
-                    bg-slate-950
-                    border
-                    border-slate-700
-                    rounded-xl
-                    px-4
-                    py-3
-                    text-white
-                  "
-                />
-
-              </div>
-
+  <input
+    type="number"
+    min={1}
+    value={cantidadConsultas}
+    onChange={(e) =>
+      cambiarCantidadConsultas(Number(e.target.value))
+    }
+    className="
+      w-full
+      bg-slate-950
+      border
+      border-slate-700
+      rounded-lg
+      px-3
+      py-2
+      text-white
+      outline-none
+      focus:border-cyan-500
+    "
+  />
+</div>
 
               {/* COSTO TOTAL */}
 
@@ -637,27 +781,28 @@ export const PlanTratamientoPanel = () => {
                   </span>
 
                   <input
-                    type="number"
-                    min={0}
-                    step="0.01"
-                    value={costoTotal}
-                    onChange={(e) =>
-                      setCostoTotal(
-                        Number(e.target.value)
-                      )
-                    }
-                    className="
-                      w-full
-                      sm:w-40
-                      bg-slate-950
-                      border
-                      border-slate-700
-                      rounded-r-xl
-                      px-4
-                      py-3
-                      text-white
-                    "
-                  />
+  type="number"
+  min={0}
+  step="0.01"
+  value={costoTotal}
+  onFocus={(e) => e.currentTarget.select()}
+  onChange={(e) =>
+    setCostoTotal(
+      Number(e.target.value)
+    )
+  }
+  className="
+    w-full
+    sm:w-40
+    bg-slate-950
+    border
+    border-slate-700
+    rounded-r-xl
+    px-4
+    py-3
+    text-white
+  "
+/>
 
                 </div>
 

@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 
@@ -334,6 +335,8 @@ const exportarPDF = () => {
   // =====================================================
   // TIPO DE DIENTE
   // =====================================================
+
+  
 
   // ------------------------------------
 // OBTENER COLOR DEL ESTADO

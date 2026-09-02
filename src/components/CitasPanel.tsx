@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import { Search, CalendarPlus, Loader2 } from 'lucide-react';
@@ -342,6 +341,15 @@ const guardarTratamiento = async () => {
     console.error(err);
     toast.error('Error al registrar tratamiento');
   }
+};
+
+const verHistoriaClinica = async () => {
+  if (!historiaCreadaId) return;
+
+
+
+
+  
 };
 
 
@@ -764,7 +772,12 @@ setShowViewModal(true);
       ✓ Historia clínica registrada
     </div>
 
-   
+    <button
+  onClick={verHistoriaClinica}
+  className="px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 transition-all"
+>
+  Abrir Historial Clínico
+</button>
 
   </div>
 
