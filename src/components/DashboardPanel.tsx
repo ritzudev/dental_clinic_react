@@ -5,9 +5,7 @@ import {
   Calendar,
   Clock,
   ArrowRight,
-  UserCheck,
   Loader2,
-  Plus,
   ClipboardList,
   FileText,
   Stethoscope,
@@ -16,6 +14,8 @@ import {
   CheckCircle2,
   AlertCircle,
   CalendarDays,
+  Sparkles,
+  CircleDot,
 } from 'lucide-react';
 
 interface CitaHoy {
@@ -247,9 +247,9 @@ export const DashboardPanel: React.FC<DashboardPanelProps> = ({
 
   if (isLoading) {
     return (
-      <div className="flex flex-1 items-center justify-center min-h-[500px]">
+      <div className="flex flex-1 items-center justify-center min-h-[500px] bg-slate-50 dark:bg-slate-950">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-cyan-50 dark:bg-cyan-950/30 flex items-center justify-center">
+          <div className="w-14 h-14 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center shadow-sm">
             <Loader2 className="animate-spin h-7 w-7 text-cyan-500" />
           </div>
 
@@ -272,56 +272,69 @@ export const DashboardPanel: React.FC<DashboardPanelProps> = ({
   // =====================================================
 
   return (
-    <div className="w-full max-w-[1500px] mx-auto space-y-6 pb-8">
+    <div className="w-full max-w-[1500px] mx-auto space-y-7 pb-10">
 
       {/* =================================================
-          CABECERA CLÍNICA
+          CABECERA PRINCIPAL
       ================================================= */}
 
-      <section className="relative overflow-hidden rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
+      <section className="relative overflow-hidden rounded-[28px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
 
-        {/* Decoración */}
-        <div className="absolute right-0 top-0 w-72 h-72 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
+        {/* Decoración adaptable al tema */}
+        <div className="absolute -right-20 -top-24 w-80 h-80 rounded-full bg-cyan-500/10 dark:bg-cyan-400/5 blur-3xl pointer-events-none" />
 
-        <div className="relative p-6 md:p-8">
+        <div className="absolute right-20 bottom-0 w-40 h-40 rounded-full bg-blue-500/5 dark:bg-blue-500/5 blur-3xl pointer-events-none" />
 
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+        <div className="relative p-7 md:p-9">
 
-            <div>
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-7">
 
-              <div className="flex items-center gap-2 mb-3">
-                <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 text-xs font-bold border border-emerald-200 dark:border-emerald-900">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  Sistema operativo
-                </span>
+            <div className="max-w-3xl">
+
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-50 dark:bg-cyan-950/40 border border-cyan-100 dark:border-cyan-900/60 text-cyan-700 dark:text-cyan-400 text-[11px] font-extrabold uppercase tracking-wider">
+
+                <Sparkles className="w-3.5 h-3.5" />
+
+                Gestión clínica
+
               </div>
 
-              <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+              <h1 className="mt-4 text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+
                 Buenos días, {getNombreUsuario()}
+
               </h1>
 
-              <p className="mt-2 text-sm md:text-base text-slate-500 dark:text-slate-400 max-w-2xl">
-                Bienvenido al centro de gestión clínica.
-                Desde aquí puede consultar la agenda,
-                pacientes y seguimiento de tratamientos.
+              <p className="mt-3 text-sm md:text-[15px] leading-6 text-slate-500 dark:text-slate-400 max-w-2xl">
+
+                Gestione la actividad de la clínica desde un solo lugar.
+                Consulte pacientes, revise la agenda y continúe con el
+                seguimiento clínico de sus pacientes.
+
               </p>
 
             </div>
 
-            <div className="flex items-center gap-3 shrink-0">
 
-              <div className="hidden sm:flex items-center gap-3 px-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+            {/* FECHA */}
 
-                <div className="w-10 h-10 rounded-xl bg-cyan-100 dark:bg-cyan-950/50 flex items-center justify-center">
+            <div className="shrink-0">
+
+              <div className="flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+
+                <div className="w-11 h-11 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center shadow-sm">
+
                   <CalendarDays className="w-5 h-5 text-cyan-600 dark:text-cyan-400" />
+
                 </div>
 
                 <div>
-                  <p className="text-[11px] uppercase tracking-wide font-bold text-slate-400">
+
+                  <p className="text-[10px] uppercase tracking-[0.15em] font-extrabold text-slate-400">
                     Hoy
                   </p>
 
-                  <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
+                  <p className="text-sm font-bold text-slate-700 dark:text-slate-200 capitalize">
                     {new Date().toLocaleDateString(
                       'es-ES',
                       {
@@ -331,6 +344,7 @@ export const DashboardPanel: React.FC<DashboardPanelProps> = ({
                       }
                     )}
                   </p>
+
                 </div>
 
               </div>
@@ -344,174 +358,33 @@ export const DashboardPanel: React.FC<DashboardPanelProps> = ({
 
 
       {/* =================================================
-          INDICADORES
-      ================================================= */}
-
-      <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-
-        {/* PACIENTES */}
-
-        <div className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm hover:shadow-md hover:border-cyan-200 dark:hover:border-cyan-900 transition-all">
-
-          <div className="flex items-start justify-between">
-
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                Pacientes activos
-              </p>
-
-              <p className="mt-3 text-3xl font-extrabold text-slate-900 dark:text-white">
-                {totalPacientes}
-              </p>
-
-              <p className="mt-1 text-xs font-medium text-slate-400">
-                Registrados en la clínica
-              </p>
-            </div>
-
-            <div className="w-11 h-11 rounded-xl bg-cyan-50 dark:bg-cyan-950/40 flex items-center justify-center group-hover:scale-105 transition-transform">
-              <Users className="w-5 h-5 text-cyan-600 dark:text-cyan-400" />
-            </div>
-
-          </div>
-
-          <button
-            onClick={() => setView('pacientes')}
-            className="mt-4 flex items-center gap-1 text-xs font-bold text-cyan-600 dark:text-cyan-400 hover:gap-2 transition-all cursor-pointer"
-          >
-            Ver pacientes
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
-
-        </div>
-
-
-        {/* CITAS HOY */}
-
-        <div className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm hover:shadow-md hover:border-blue-200 dark:hover:border-blue-900 transition-all">
-
-          <div className="flex items-start justify-between">
-
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                Agenda de hoy
-              </p>
-
-              <p className="mt-3 text-3xl font-extrabold text-slate-900 dark:text-white">
-                {citasDeHoyCount}
-              </p>
-
-              <p className="mt-1 text-xs font-medium text-slate-400">
-                Citas programadas
-              </p>
-            </div>
-
-            <div className="w-11 h-11 rounded-xl bg-blue-50 dark:bg-blue-950/40 flex items-center justify-center group-hover:scale-105 transition-transform">
-              <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-            </div>
-
-          </div>
-
-          <button
-            onClick={() => setView('citas')}
-            className="mt-4 flex items-center gap-1 text-xs font-bold text-blue-600 dark:text-blue-400 hover:gap-2 transition-all cursor-pointer"
-          >
-            Abrir agenda
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
-
-        </div>
-
-
-        {/* PENDIENTES */}
-
-        <div className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm hover:shadow-md hover:border-amber-200 dark:hover:border-amber-900 transition-all">
-
-          <div className="flex items-start justify-between">
-
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                Pendientes
-              </p>
-
-              <p className="mt-3 text-3xl font-extrabold text-slate-900 dark:text-white">
-                {citasPendientes}
-              </p>
-
-              <p className="mt-1 text-xs font-medium text-slate-400">
-                Citas por confirmar
-              </p>
-            </div>
-
-            <div className="w-11 h-11 rounded-xl bg-amber-50 dark:bg-amber-950/40 flex items-center justify-center group-hover:scale-105 transition-transform">
-              <Clock className="w-5 h-5 text-amber-600 dark:text-amber-400" />
-            </div>
-
-          </div>
-
-          <button
-            onClick={() => setView('citas')}
-            className="mt-4 flex items-center gap-1 text-xs font-bold text-amber-600 dark:text-amber-400 hover:gap-2 transition-all cursor-pointer"
-          >
-            Revisar pendientes
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
-
-        </div>
-
-
-        {/* PROFESIONALES */}
-
-        <div className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm hover:shadow-md hover:border-indigo-200 dark:hover:border-indigo-900 transition-all">
-
-          <div className="flex items-start justify-between">
-
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                Profesionales
-              </p>
-
-              <p className="mt-3 text-3xl font-extrabold text-slate-900 dark:text-white">
-                {totalMedicos}
-              </p>
-
-              <p className="mt-1 text-xs font-medium text-slate-400">
-                Médicos activos
-              </p>
-            </div>
-
-            <div className="w-11 h-11 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 flex items-center justify-center group-hover:scale-105 transition-transform">
-              <UserCheck className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-            </div>
-
-          </div>
-
-          <div className="mt-4 flex items-center gap-1 text-xs font-bold text-indigo-600 dark:text-indigo-400">
-            <Activity className="w-3.5 h-3.5" />
-            Equipo clínico
-          </div>
-
-        </div>
-
-      </section>
-
-
-      {/* =================================================
-          ACCIONES RÁPIDAS
+          GESTIÓN DIARIA
       ================================================= */}
 
       <section>
 
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-end justify-between mb-4">
 
           <div>
-            <h2 className="text-lg font-extrabold text-slate-900 dark:text-white">
-              Acciones clínicas
-            </h2>
 
-            <p className="text-xs text-slate-400 mt-1">
-              Accesos rápidos para la gestión diaria
+            <div className="flex items-center gap-2">
+
+              <div className="w-8 h-8 rounded-lg bg-cyan-50 dark:bg-cyan-950/40 flex items-center justify-center">
+
+                <Stethoscope className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
+
+              </div>
+
+              <h2 className="text-lg font-extrabold text-slate-900 dark:text-white">
+                Gestión diaria
+              </h2>
+
+            </div>
+
+            <p className="text-xs text-slate-400 mt-1 ml-10">
+              Herramientas principales de atención clínica
             </p>
+
           </div>
 
         </div>
@@ -519,30 +392,37 @@ export const DashboardPanel: React.FC<DashboardPanelProps> = ({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
 
-          {/* PACIENTE */}
+          {/* PACIENTES */}
 
           <button
             onClick={() => setView('pacientes')}
-            className="group text-left bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 hover:border-cyan-400 dark:hover:border-cyan-700 hover:shadow-md transition-all cursor-pointer"
+            className="group relative overflow-hidden text-left bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 hover:border-cyan-300 dark:hover:border-cyan-800 hover:shadow-lg transition-all cursor-pointer"
           >
 
             <div className="flex items-center justify-between">
 
               <div className="w-11 h-11 rounded-xl bg-cyan-50 dark:bg-cyan-950/40 flex items-center justify-center">
-                <Plus className="w-5 h-5 text-cyan-600 dark:text-cyan-400" />
+
+                <Users className="w-5 h-5 text-cyan-600 dark:text-cyan-400" />
+
               </div>
 
-              <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-cyan-500 group-hover:translate-x-1 transition-all" />
+              <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-700 group-hover:text-cyan-500 group-hover:translate-x-1 transition-all" />
 
             </div>
 
             <h3 className="mt-4 font-bold text-slate-800 dark:text-white">
-              Gestionar pacientes
+              Pacientes
             </h3>
 
             <p className="mt-1 text-xs text-slate-400">
               Registrar y consultar pacientes
             </p>
+
+            <div className="mt-4 flex items-center gap-2 text-[11px] font-bold text-cyan-600 dark:text-cyan-400">
+              <CircleDot className="w-3 h-3" />
+              {totalPacientes} pacientes activos
+            </div>
 
           </button>
 
@@ -551,44 +431,53 @@ export const DashboardPanel: React.FC<DashboardPanelProps> = ({
 
           <button
             onClick={() => setView('citas')}
-            className="group text-left bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 hover:border-blue-400 dark:hover:border-blue-700 hover:shadow-md transition-all cursor-pointer"
+            className="group relative overflow-hidden text-left bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 hover:border-blue-300 dark:hover:border-blue-800 hover:shadow-lg transition-all cursor-pointer"
           >
 
             <div className="flex items-center justify-between">
 
               <div className="w-11 h-11 rounded-xl bg-blue-50 dark:bg-blue-950/40 flex items-center justify-center">
+
                 <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+
               </div>
 
-              <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-blue-500 group-hover:translate-x-1 transition-all" />
+              <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-700 group-hover:text-blue-500 group-hover:translate-x-1 transition-all" />
 
             </div>
 
             <h3 className="mt-4 font-bold text-slate-800 dark:text-white">
-              Gestionar citas
+              Agenda
             </h3>
 
             <p className="mt-1 text-xs text-slate-400">
-              Revisar y organizar la agenda
+              Revisar y organizar las citas
             </p>
+
+            <div className="mt-4 flex items-center gap-2 text-[11px] font-bold text-blue-600 dark:text-blue-400">
+              <CalendarDays className="w-3 h-3" />
+              {citasDeHoyCount} citas para hoy
+            </div>
 
           </button>
 
 
-          {/* HISTORIA */}
+          {/* HISTORIA CLÍNICA */}
 
           <button
             onClick={() => setView('historia-clinica')}
-            className="group text-left bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 hover:border-emerald-400 dark:hover:border-emerald-700 hover:shadow-md transition-all cursor-pointer"
+            className="group relative overflow-hidden text-left bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 hover:border-emerald-300 dark:hover:border-emerald-800 hover:shadow-lg transition-all cursor-pointer"
           >
 
             <div className="flex items-center justify-between">
 
               <div className="w-11 h-11 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 flex items-center justify-center">
+
                 <FileText className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+
               </div>
 
-              <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-emerald-500 group-hover:translate-x-1 transition-all" />
+              <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-700 group-hover:text-emerald-500 group-hover:translate-x-1 transition-all" />
 
             </div>
 
@@ -600,6 +489,11 @@ export const DashboardPanel: React.FC<DashboardPanelProps> = ({
               Consultar información clínica
             </p>
 
+            <div className="mt-4 flex items-center gap-2 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+              <Activity className="w-3 h-3" />
+              Seguimiento clínico
+            </div>
+
           </button>
 
 
@@ -607,16 +501,18 @@ export const DashboardPanel: React.FC<DashboardPanelProps> = ({
 
           <button
             onClick={() => setView('plan-tratamiento')}
-            className="group text-left bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 hover:border-violet-400 dark:hover:border-violet-700 hover:shadow-md transition-all cursor-pointer"
+            className="group relative overflow-hidden text-left bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 hover:border-violet-300 dark:hover:border-violet-800 hover:shadow-lg transition-all cursor-pointer"
           >
 
             <div className="flex items-center justify-between">
 
               <div className="w-11 h-11 rounded-xl bg-violet-50 dark:bg-violet-950/40 flex items-center justify-center">
+
                 <ClipboardList className="w-5 h-5 text-violet-600 dark:text-violet-400" />
+
               </div>
 
-              <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-violet-500 group-hover:translate-x-1 transition-all" />
+              <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-700 group-hover:text-violet-500 group-hover:translate-x-1 transition-all" />
 
             </div>
 
@@ -628,6 +524,11 @@ export const DashboardPanel: React.FC<DashboardPanelProps> = ({
               Planificar tratamientos odontológicos
             </p>
 
+            <div className="mt-4 flex items-center gap-2 text-[11px] font-bold text-violet-600 dark:text-violet-400">
+              <Stethoscope className="w-3 h-3" />
+              Tratamiento personalizado
+            </div>
+
           </button>
 
         </div>
@@ -636,7 +537,146 @@ export const DashboardPanel: React.FC<DashboardPanelProps> = ({
 
 
       {/* =================================================
-          AGENDA
+          MINI RESUMEN DE AGENDA
+      ================================================= */}
+
+      <section className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+
+        {/* COLUMNA PRINCIPAL */}
+
+        <div className="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
+
+          <div className="flex items-center justify-between">
+
+            <div>
+
+              <div className="flex items-center gap-2">
+
+                <Clock className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
+
+                <h2 className="text-base font-extrabold text-slate-900 dark:text-white">
+                  Resumen de agenda
+                </h2>
+
+              </div>
+
+              <p className="text-xs text-slate-400 mt-1">
+                Estado de las atenciones programadas
+              </p>
+
+            </div>
+
+            <button
+              onClick={() => setView('citas')}
+              className="text-xs font-bold text-cyan-600 dark:text-cyan-400 hover:text-cyan-500 transition cursor-pointer"
+            >
+              Ver agenda
+            </button>
+
+          </div>
+
+
+          <div className="mt-6 grid grid-cols-3 gap-3">
+
+            <div className="rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-4">
+
+              <p className="text-[10px] uppercase tracking-wider font-extrabold text-slate-400">
+                Hoy
+              </p>
+
+              <p className="mt-2 text-2xl font-extrabold text-slate-900 dark:text-white">
+                {citasDeHoyCount}
+              </p>
+
+              <p className="text-[10px] text-slate-400 mt-1">
+                citas
+              </p>
+
+            </div>
+
+
+            <div className="rounded-xl bg-amber-50 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-900/50 p-4">
+
+              <p className="text-[10px] uppercase tracking-wider font-extrabold text-amber-600 dark:text-amber-400">
+                Pendientes
+              </p>
+
+              <p className="mt-2 text-2xl font-extrabold text-amber-700 dark:text-amber-400">
+                {citasPendientes}
+              </p>
+
+              <p className="text-[10px] text-amber-600/70 dark:text-amber-400/70 mt-1">
+                por confirmar
+              </p>
+
+            </div>
+
+
+            <div className="rounded-xl bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/50 p-4">
+
+              <p className="text-[10px] uppercase tracking-wider font-extrabold text-emerald-600 dark:text-emerald-400">
+                Equipo
+              </p>
+
+              <p className="mt-2 text-2xl font-extrabold text-emerald-700 dark:text-emerald-400">
+                {totalMedicos}
+              </p>
+
+              <p className="text-[10px] text-emerald-600/70 dark:text-emerald-400/70 mt-1">
+                profesionales
+              </p>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        {/* PANEL LATERAL */}
+
+        <div className="relative overflow-hidden bg-gradient-to-br from-cyan-600 to-blue-700 dark:from-cyan-950 dark:to-blue-950 rounded-2xl p-6 text-white shadow-sm">
+
+          <div className="absolute -right-12 -top-12 w-36 h-36 rounded-full bg-white/10 blur-2xl" />
+
+          <div className="relative">
+
+            <div className="w-11 h-11 rounded-xl bg-white/15 flex items-center justify-center">
+
+              <Stethoscope className="w-5 h-5 text-white" />
+
+            </div>
+
+            <p className="mt-5 text-[10px] uppercase tracking-[0.18em] font-extrabold text-cyan-100">
+              Atención clínica
+            </p>
+
+            <h3 className="mt-2 text-xl font-extrabold">
+              Todo listo para continuar.
+            </h3>
+
+            <p className="mt-2 text-xs leading-5 text-cyan-50/80">
+              Acceda rápidamente a pacientes, agenda e historias
+              clínicas desde este panel.
+            </p>
+
+            <button
+              onClick={() => setView('citas')}
+              className="mt-5 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white text-cyan-700 hover:bg-cyan-50 text-xs font-extrabold transition cursor-pointer"
+            >
+              Revisar agenda
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      {/* =================================================
+          AGENDA CLÍNICA
       ================================================= */}
 
       <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
@@ -652,10 +692,13 @@ export const DashboardPanel: React.FC<DashboardPanelProps> = ({
               <div className="flex items-center gap-2">
 
                 <div className="w-9 h-9 rounded-xl bg-cyan-50 dark:bg-cyan-950/40 flex items-center justify-center">
+
                   <Stethoscope className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
+
                 </div>
 
                 <div>
+
                   <h2 className="text-lg font-extrabold text-slate-900 dark:text-white">
                     Agenda clínica
                   </h2>
@@ -663,6 +706,7 @@ export const DashboardPanel: React.FC<DashboardPanelProps> = ({
                   <p className="text-xs text-slate-400 mt-0.5">
                     Citas de hoy y próximas atenciones
                   </p>
+
                 </div>
 
               </div>
@@ -691,7 +735,9 @@ export const DashboardPanel: React.FC<DashboardPanelProps> = ({
             <div className="py-14 px-6 text-center">
 
               <div className="mx-auto w-14 h-14 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+
                 <CalendarDays className="w-6 h-6 text-slate-400" />
+
               </div>
 
               <h3 className="mt-4 text-sm font-bold text-slate-700 dark:text-slate-200">
@@ -737,7 +783,9 @@ export const DashboardPanel: React.FC<DashboardPanelProps> = ({
                       <div className="flex items-center gap-3 lg:w-28 shrink-0">
 
                         <div className="w-11 h-11 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+
                           <Clock className="w-5 h-5 text-slate-500 dark:text-slate-400" />
+
                         </div>
 
                         <div>
@@ -760,17 +808,21 @@ export const DashboardPanel: React.FC<DashboardPanelProps> = ({
                       <div className="flex items-center gap-3 flex-1 min-w-0">
 
                         <div className="w-11 h-11 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white font-bold text-sm shrink-0">
+
                           {(
                             apt.pacientes?.nombres?.charAt(0) ||
                             'P'
                           ).toUpperCase()}
+
                         </div>
 
                         <div className="min-w-0">
 
                           <h3 className="font-bold text-slate-800 dark:text-white truncate">
+
                             {apt.pacientes?.nombres}{' '}
                             {apt.pacientes?.apellidos}
+
                           </h3>
 
                           <div className="flex flex-wrap items-center gap-2 mt-1">
@@ -807,14 +859,17 @@ export const DashboardPanel: React.FC<DashboardPanelProps> = ({
                         <span
                           className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[11px] font-extrabold ${estado.className}`}
                         >
+
                           <EstadoIcon className="w-3.5 h-3.5" />
+
                           {estado.label}
+
                         </span>
 
                       </div>
 
 
-                      {/* ACCIÓN VISUAL */}
+                      {/* ACCIÓN */}
 
                       <div className="hidden lg:flex justify-end">
 
@@ -823,7 +878,9 @@ export const DashboardPanel: React.FC<DashboardPanelProps> = ({
                           className="w-9 h-9 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-400 hover:text-cyan-500 hover:border-cyan-300 dark:hover:border-cyan-800 transition cursor-pointer"
                           title="Ver agenda"
                         >
+
                           <ChevronRight className="w-4 h-4" />
+
                         </button>
 
                       </div>
@@ -844,10 +901,10 @@ export const DashboardPanel: React.FC<DashboardPanelProps> = ({
 
 
       {/* =================================================
-          PIE DEL DASHBOARD
+          PIE
       ================================================= */}
 
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-1">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-1 pt-1">
 
         <div className="flex items-center gap-2 text-xs text-slate-400">
 

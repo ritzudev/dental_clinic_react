@@ -26,3 +26,13 @@
   background-size: 200% 200%;
   animation: gradientAnimation 15s ease infinite;
 }
+
+/* Ocultar visualmente las barras de scroll */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

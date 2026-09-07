@@ -12,7 +12,7 @@ import { CitasPanel } from './components/CitasPanel';
 import { HistoriaClinicaPanel } from './components/HistoriaClinicaPanel';
 import { TratamientosPanel } from './components/TratamientosPanel';
 import { PlanTratamientoPanel } from './components/PlanTratamientoPanel';
-import { PagosPanel } from './components/PagosPanel';
+import PagosPanel from './components/PagosPanel';
 import { Loader2 } from 'lucide-react';
 
 

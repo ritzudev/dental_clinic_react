@@ -47,14 +47,11 @@ const handleRegistrarPago = async () => {
   try {
 
     setGuardando(true);
-
-    await registrarPago(
-      paciente.id,
-      tratamientoSeleccionado.id,
-      Number(tratamientoSeleccionado.costo),
-      metodoPago,
-      observaciones
-    );
+await registrarPago(
+  paciente.id,
+  tratamientoSeleccionado.id,
+  Number(tratamientoSeleccionado.costo)
+);
 
     await finalizarTratamiento(tratamientoSeleccionado.id);
 

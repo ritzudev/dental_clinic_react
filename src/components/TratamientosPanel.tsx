@@ -1,1619 +1,1387 @@
-import { useEffect, useState } from "react";
-import { supabase } from "../lib/supabase";
-
-import {
-  Search,
-  User,
-  ClipboardList,
-  Activity,
-  Clock3,
-  Check,
-  CheckCircle,
-  PlusCircle,
-  Eye
-} from "lucide-react";
-
-interface Paciente {
-  id: number;
-  nombres: string;
-  apellidos: string;
-  dni: string;
-  telefono: string;
-}
+import { useMemo, useState } from "react";
 
 interface Tratamiento {
   id: number;
-
-  paciente_id: number;
-
-  historia_clinica_id?: number;
-
-  nombre_tratamiento: string;
-
+  nombre: string;
+  categoria: string;
   descripcion: string;
-
-  costo: number;
-
-  estado: string;
-
-  fecha_inicio: string;
-
-  fecha_fin?: string;
-
-  created_at: string;
-
-  pacientes?: Paciente;
-
-  historias_clinicas?: {
-
-    id: number;
-
-    diagnostico: string;
-
-  };
+  queEs: string;
+  paraQueSirve: string[];
+  zona: string;
+  duracion: string;
+  sesiones: string;
+  precio: number;
+  pasos: string[];
+  tipoDiente: "diente" | "molar" | "encía" | "sonrisa" | "brackets";
 }
 
-export const TratamientosPanel = () => {
+const categorias = [
+  "Todos",
+  "Preventivos",
+  "Restauradores",
+  "Endodoncia",
+  "Periodoncia",
+  "Cirugía",
+  "Estética",
+  "Ortodoncia",
+];
 
-  /* ==========================
-          BUSCADOR
-  ========================== */
+const tratamientos: Tratamiento[] = [
+  {
+    id: 1,
+    nombre: "Limpieza dental",
+    categoria: "Preventivos",
+    descripcion:
+      "Elimina placa bacteriana, sarro y manchas superficiales para mantener una adecuada salud oral.",
+    queEs:
+      "Es un procedimiento preventivo destinado a eliminar acumulaciones de placa bacteriana y cálculo dental que no pueden retirarse completamente con el cepillado habitual.",
+    paraQueSirve: [
+      "Eliminar placa bacteriana y sarro.",
+      "Prevenir enfermedades de las encías.",
+      "Reducir manchas superficiales.",
+      "Mantener una adecuada higiene oral.",
+    ],
+    zona: "Superficie dental y línea gingival",
+    duracion: "45 min",
+    sesiones: "1 sesión",
+    precio: 100,
+    pasos: [
+      "Evaluación inicial.",
+      "Remoción de placa y cálculo.",
+      "Limpieza de las superficies dentales.",
+      "Pulido dental.",
+      "Recomendaciones de higiene oral.",
+    ],
+    tipoDiente: "diente",
+  },
 
-  const [dni, setDni] = useState("");
+  {
+    id: 2,
+    nombre: "Sellantes dentales",
+    categoria: "Preventivos",
+    descripcion:
+      "Protege las superficies profundas de los molares para ayudar a prevenir la aparición de caries.",
+    queEs:
+      "Es una capa protectora que se coloca sobre las fosas y fisuras de las piezas dentales, especialmente en molares y premolares.",
+    paraQueSirve: [
+      "Prevenir la aparición de caries.",
+      "Proteger zonas difíciles de limpiar.",
+      "Reducir la acumulación de placa.",
+      "Proteger molares y premolares.",
+    ],
+    zona: "Superficie oclusal de molares y premolares",
+    duracion: "30 min",
+    sesiones: "1 sesión",
+    precio: 80,
+    pasos: [
+      "Evaluación de la pieza dental.",
+      "Limpieza de la superficie.",
+      "Preparación del esmalte.",
+      "Aplicación del sellante.",
+      "Fotopolimerización y control.",
+    ],
+    tipoDiente: "molar",
+  },
 
-  const [loading, setLoading] = useState(false);
+  {
+    id: 3,
+    nombre: "Restauración dental",
+    categoria: "Restauradores",
+    descripcion:
+      "Repara piezas dentales afectadas por caries, fracturas o desgaste mediante materiales restauradores.",
+    queEs:
+      "Es un procedimiento destinado a recuperar la forma y función de una pieza dental que ha perdido estructura por caries, fracturas o desgaste.",
+    paraQueSirve: [
+      "Eliminar tejido dental afectado.",
+      "Recuperar la anatomía del diente.",
+      "Restablecer la función masticatoria.",
+      "Mejorar la apariencia de la pieza.",
+    ],
+    zona: "Corona dental",
+    duracion: "60 min",
+    sesiones: "1 sesión",
+    precio: 180,
+    pasos: [
+      "Evaluación de la pieza.",
+      "Eliminación del tejido afectado.",
+      "Preparación de la superficie.",
+      "Colocación del material restaurador.",
+      "Ajuste y pulido final.",
+    ],
+    tipoDiente: "diente",
+  },
 
-  const [paciente, setPaciente] =
-    useState<Paciente | null>(null);
-  
- const [mostrarModalPaciente, setMostrarModalPaciente] = useState(false);
+  {
+    id: 4,
+    nombre: "Tratamiento de conductos",
+    categoria: "Endodoncia",
+    descripcion:
+      "Elimina la infección del tejido pulpar y permite conservar la pieza dental afectada.",
+    queEs:
+      "Es un procedimiento endodóntico que permite eliminar el tejido pulpar afectado, limpiar los conductos radiculares y sellarlos para conservar el diente.",
+    paraQueSirve: [
+      "Eliminar la infección del tejido pulpar.",
+      "Controlar el dolor dental.",
+      "Conservar el diente natural.",
+      "Evitar la extracción de la pieza.",
+      "Restablecer la función del diente.",
+    ],
+    zona: "Pulpa y conductos radiculares",
+    duracion: "90 min",
+    sesiones: "1 - 2 sesiones",
+    precio: 350,
+    pasos: [
+      "Anestesia local.",
+      "Apertura de la corona dental.",
+      "Limpieza y conformación de los conductos.",
+      "Desinfección del sistema radicular.",
+      "Sellado de los conductos.",
+      "Restauración final del diente.",
+    ],
+    tipoDiente: "molar",
+  },
 
-const [pestanaPaciente, setPestanaPaciente] =
-useState<"registro" | "historial">("registro");
+  {
+    id: 5,
+    nombre: "Raspado y alisado radicular",
+    categoria: "Periodoncia",
+    descripcion:
+      "Elimina el sarro acumulado debajo de la encía y ayuda a controlar la enfermedad periodontal.",
+    queEs:
+      "Es un procedimiento periodontal profundo que permite eliminar cálculo y depósitos bacterianos adheridos a las superficies radiculares.",
+    paraQueSirve: [
+      "Reducir la inflamación gingival.",
+      "Eliminar cálculo subgingival.",
+      "Controlar la enfermedad periodontal.",
+      "Mejorar la salud de las encías.",
+    ],
+    zona: "Encía y superficies radiculares",
+    duracion: "90 min",
+    sesiones: "Según evaluación",
+    precio: 200,
+    pasos: [
+      "Evaluación periodontal.",
+      "Identificación de zonas afectadas.",
+      "Remoción del cálculo subgingival.",
+      "Alisado de las superficies radiculares.",
+      "Control periodontal.",
+    ],
+    tipoDiente: "encía",
+  },
 
-  /* ==========================
-        NUEVO TRATAMIENTO
-  ========================== */
+  {
+    id: 6,
+    nombre: "Extracción dental",
+    categoria: "Cirugía",
+    descripcion:
+      "Retira una pieza dental cuando esta no puede conservarse mediante otros tratamientos.",
+    queEs:
+      "Es un procedimiento quirúrgico mediante el cual se retira una pieza dental de su alveolo cuando existe una indicación clínica para ello.",
+    paraQueSirve: [
+      "Retirar piezas dentales no conservables.",
+      "Controlar infecciones determinadas.",
+      "Resolver algunas complicaciones dentales.",
+      "Facilitar tratamientos posteriores.",
+    ],
+    zona: "Pieza dental y tejido circundante",
+    duracion: "45 min",
+    sesiones: "1 sesión",
+    precio: 250,
+    pasos: [
+      "Evaluación clínica y radiográfica.",
+      "Anestesia local.",
+      "Preparación de la zona.",
+      "Extracción de la pieza.",
+      "Control de la zona intervenida.",
+      "Indicaciones postoperatorias.",
+    ],
+    tipoDiente: "molar",
+  },
 
-  const [nombreTratamiento,
-    setNombreTratamiento] =
-      useState("");
+  {
+    id: 7,
+    nombre: "Blanqueamiento dental",
+    categoria: "Estética",
+    descripcion:
+      "Ayuda a mejorar el tono de los dientes y conseguir una sonrisa visualmente más luminosa.",
+    queEs:
+      "Es un procedimiento estético destinado a aclarar el color de los dientes mediante agentes blanqueadores aplicados bajo supervisión odontológica.",
+    paraQueSirve: [
+      "Mejorar el tono dental.",
+      "Reducir determinadas manchas.",
+      "Mejorar la apariencia de la sonrisa.",
+      "Realzar la estética dental.",
+    ],
+    zona: "Superficie externa de los dientes",
+    duracion: "90 min",
+    sesiones: "1 - 2 sesiones",
+    precio: 500,
+    pasos: [
+      "Evaluación del estado dental.",
+      "Registro del tono inicial.",
+      "Protección de tejidos blandos.",
+      "Aplicación del agente blanqueador.",
+      "Control del resultado.",
+      "Indicaciones posteriores.",
+    ],
+    tipoDiente: "sonrisa",
+  },
 
-  const [descripcion,
-    setDescripcion] =
-      useState("");
+  {
+    id: 8,
+    nombre: "Carillas dentales",
+    categoria: "Estética",
+    descripcion:
+      "Mejora la forma, color y apariencia de determinadas piezas mediante finas láminas estéticas.",
+    queEs:
+      "Son restauraciones delgadas que se colocan sobre la superficie visible de determinados dientes para mejorar características estéticas.",
+    paraQueSirve: [
+      "Mejorar la forma de los dientes.",
+      "Modificar determinadas alteraciones de color.",
+      "Mejorar proporciones estéticas.",
+      "Armonizar la sonrisa.",
+    ],
+    zona: "Superficie vestibular de dientes anteriores",
+    duracion: "90 min",
+    sesiones: "2 - 3 sesiones",
+    precio: 600,
+    pasos: [
+      "Evaluación estética.",
+      "Planificación del caso.",
+      "Preparación de la pieza cuando corresponda.",
+      "Toma de registros.",
+      "Prueba de las restauraciones.",
+      "Cementación y ajuste final.",
+    ],
+    tipoDiente: "sonrisa",
+  },
 
-  const [costo,
-    setCosto] =
-      useState("");
+  {
+    id: 9,
+    nombre: "Brackets dentales",
+    categoria: "Ortodoncia",
+    descripcion:
+      "Permiten corregir progresivamente la posición de los dientes y mejorar la mordida.",
+    queEs:
+      "Es un tratamiento ortodóntico que utiliza brackets y elementos auxiliares para aplicar fuerzas controladas sobre las piezas dentales.",
+    paraQueSirve: [
+      "Corregir la posición de los dientes.",
+      "Mejorar determinadas alteraciones de mordida.",
+      "Alinear progresivamente la dentición.",
+      "Mejorar la función y estética dental.",
+    ],
+    zona: "Superficie de las piezas dentales",
+    duracion: "45 min",
+    sesiones: "Controles periódicos",
+    precio: 450,
+    pasos: [
+      "Evaluación ortodóntica.",
+      "Planificación del tratamiento.",
+      "Colocación de brackets.",
+      "Instalación del arco.",
+      "Controles y ajustes periódicos.",
+      "Seguimiento de la evolución.",
+    ],
+    tipoDiente: "brackets",
+  },
+];
 
-  /* ==========================
-          MENSAJES
-  ========================== */
+const getCategoriaStyle = (categoria: string) => {
+  switch (categoria) {
+    case "Endodoncia":
+      return {
+        badge:
+          "bg-violet-100 text-violet-700 border-violet-200 dark:bg-violet-500/10 dark:text-violet-300 dark:border-violet-500/20",
+        accent: "text-violet-600 dark:text-violet-300",
+      };
 
-  const [mensajeExito,
-    setMensajeExito] =
-      useState("");
+    case "Preventivos":
+      return {
+        badge:
+          "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/20",
+        accent: "text-emerald-600 dark:text-emerald-300",
+      };
 
-  const [mensajeActualizacion,
-    setMensajeActualizacion] =
-      useState("");
+    case "Restauradores":
+      return {
+        badge:
+          "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/20",
+        accent: "text-blue-600 dark:text-blue-300",
+      };
 
-  /* ==========================
-          LISTAS
-  ========================== */
+    case "Periodoncia":
+      return {
+        badge:
+          "bg-teal-100 text-teal-700 border-teal-200 dark:bg-teal-500/10 dark:text-teal-300 dark:border-teal-500/20",
+        accent: "text-teal-600 dark:text-teal-300",
+      };
 
-  const [tratamientos,
-    setTratamientos] =
-      useState<Tratamiento[]>([]);
+    case "Cirugía":
+      return {
+        badge:
+          "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-500/20",
+        accent: "text-rose-600 dark:text-rose-300",
+      };
 
-  const [todosTratamientos,
-    setTodosTratamientos] =
-      useState<Tratamiento[]>([]);
+    case "Estética":
+      return {
+        badge:
+          "bg-pink-100 text-pink-700 border-pink-200 dark:bg-pink-500/10 dark:text-pink-300 dark:border-pink-500/20",
+        accent: "text-pink-600 dark:text-pink-300",
+      };
 
-  /* ==========================
-          HISTORIAL
-  ========================== */
+    case "Ortodoncia":
+      return {
+        badge:
+          "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/20",
+        accent: "text-amber-600 dark:text-amber-300",
+      };
 
-  const [mostrarHistorial,
-    setMostrarHistorial] =
-      useState(false);
+    default:
+      return {
+        badge:
+          "bg-cyan-100 text-cyan-700 border-cyan-200 dark:bg-cyan-500/10 dark:text-cyan-300 dark:border-cyan-500/20",
+        accent: "text-cyan-600 dark:text-cyan-300",
+      };
+  }
+};
 
-  /* ==========================
-            MODAL
-  ========================== */
+const ToothIllustration = ({
+  tipo,
+  large = false,
+}: {
+  tipo: Tratamiento["tipoDiente"];
+  large?: boolean;
+}) => {
+  const size = large ? "w-40 h-40" : "w-28 h-28";
 
-  const [tratamientoSeleccionado,
-    setTratamientoSeleccionado] =
-      useState<Tratamiento | null>(null);
-
-  const [modoEdicion,
-    setModoEdicion] =
-      useState(false);
-
-  const [editNombre,
-    setEditNombre] =
-      useState("");
-
-  const [editDescripcion,
-    setEditDescripcion] =
-      useState("");
-
-  const [editCosto,
-    setEditCosto] =
-      useState("");
-
-  const [editEstado,
-    setEditEstado] =
-      useState("");
-
-  /* ==========================
-        DASHBOARD
-  ========================== */
-
-  const pendientes =
-    todosTratamientos.filter(
-      t => t.estado === "pendiente"
-    ).length;
-
-  const proceso =
-    todosTratamientos.filter(
-      t => t.estado === "en proceso"
-    ).length;
-
-  const finalizados =
-    todosTratamientos.filter(
-      t => t.estado === "finalizado"
-    ).length;
-
-  const totalCosto =
-    todosTratamientos.reduce(
-      (acc, t) => acc + Number(t.costo),
-      0
+  if (tipo === "sonrisa") {
+    return (
+      <div
+        className={`${size} flex items-center justify-center rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800`}
+      >
+        <svg
+          viewBox="0 0 180 120"
+          className="w-[85%] h-[85%]"
+          fill="none"
+        >
+          <path
+            d="M20 42C48 92 132 92 160 42"
+            stroke="currentColor"
+            strokeWidth="7"
+            strokeLinecap="round"
+            className="text-slate-300 dark:text-slate-600"
+          />
+          <path
+            d="M32 42C38 68 52 78 64 78V43H32Z"
+            fill="white"
+            stroke="currentColor"
+            strokeWidth="3"
+            className="text-slate-300 dark:text-slate-500"
+          />
+          <path
+            d="M64 43V78C76 80 88 80 90 80V43H64Z"
+            fill="white"
+            stroke="currentColor"
+            strokeWidth="3"
+            className="text-slate-300 dark:text-slate-500"
+          />
+          <path
+            d="M90 43V80C102 80 114 78 116 77V43H90Z"
+            fill="white"
+            stroke="currentColor"
+            strokeWidth="3"
+            className="text-slate-300 dark:text-slate-500"
+          />
+          <path
+            d="M116 43V77C130 73 140 62 146 43H116Z"
+            fill="white"
+            stroke="currentColor"
+            strokeWidth="3"
+            className="text-slate-300 dark:text-slate-500"
+          />
+        </svg>
+      </div>
     );
+  }
 
-  useEffect(() => {
-
-    cargarTodosTratamientos();
-
-  }, []);
-
-    /* ==========================
-      CARGAR TODOS
-  ========================== */
-
-  const cargarTodosTratamientos = async () => {
-
-    const { data, error } = await supabase
-
-      .from("tratamientos")
-
-      .select(`
-        *,
-        pacientes(
-          id,
-          nombres,
-          apellidos,
-          dni,
-          telefono
-        ),
-        historias_clinicas(
-          id,
-          diagnostico
-        )
-      `)
-
-      .order("created_at", {
-        ascending: false
-      });
-
-    if (error) {
-
-      console.error(error);
-
-      return;
-
-    }
-
-    setTodosTratamientos(
-      (data as Tratamiento[]) || []
+  if (tipo === "brackets") {
+    return (
+      <div
+        className={`${size} flex items-center justify-center rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800`}
+      >
+        <svg
+          viewBox="0 0 180 180"
+          className="w-[80%] h-[80%]"
+          fill="none"
+        >
+          <path
+            d="M55 32C39 45 34 68 40 98C45 122 57 145 70 151C79 155 86 144 90 132C94 144 101 155 110 151C123 145 135 122 140 98C146 68 141 45 125 32C106 17 74 17 55 32Z"
+            fill="white"
+            stroke="currentColor"
+            strokeWidth="5"
+            className="text-slate-300 dark:text-slate-500"
+          />
+          <path
+            d="M43 82H137"
+            stroke="currentColor"
+            strokeWidth="6"
+            className="text-cyan-500"
+          />
+          {[52, 72, 92, 112].map((x) => (
+            <rect
+              key={x}
+              x={x}
+              y="72"
+              width="16"
+              height="20"
+              rx="3"
+              fill="currentColor"
+              className="text-blue-500"
+            />
+          ))}
+        </svg>
+      </div>
     );
+  }
 
-  };
-
-  /* ==========================
-      CARGAR TRATAMIENTOS
-  ========================== */
-
-  const cargarTratamientos = async (
-    pacienteId: number
-  ) => {
-
-    const { data, error } = await supabase
-
-      .from("tratamientos")
-
-      .select("*")
-
-      .eq("paciente_id", pacienteId)
-
-      .order("created_at", {
-        ascending: false
-      });
-
-    if (!error) {
-
-      setTratamientos(
-        (data as Tratamiento[]) || []
-      );
-
-    }
-
-  };
-
-  /* ==========================
-      BUSCAR PACIENTE
-  ========================== */
-
-  const buscarPaciente = async () => {
-
-    if (!dni.trim()) return;
-
-    setLoading(true);
-
-    const { data, error } = await supabase
-
-      .from("pacientes")
-
-      .select("*")
-
-      .eq("dni", dni)
-
-      .single();
-
-    if (error || !data) {
-
-      alert("Paciente no encontrado");
-
-      setPaciente(null);
-
-      setLoading(false);
-
-      return;
-
-    }
-
-    setPaciente(data);
-    setMostrarModalPaciente(true);
-
-    await cargarTratamientos(data.id);
-
-    setLoading(false);
-
-  };
-
-  /* ==========================
-      REGISTRAR TRATAMIENTO
-  ========================== */
-
-  const guardarTratamiento = async () => {
-
-    if (!paciente) return;
-
-    if (!nombreTratamiento.trim()) {
-
-      alert("Ingrese el tratamiento");
-
-      return;
-
-    }
-
-    const { error } = await supabase
-
-      .from("tratamientos")
-
-      .insert([
-
-        {
-
-          paciente_id: paciente.id,
-
-          nombre_tratamiento: nombreTratamiento,
-
-          descripcion,
-
-          costo: Number(costo || 0),
-
-          estado: "pendiente"
-
-        }
-
-      ]);
-
-    if (error) {
-
-      console.error(error);
-
-      return;
-
-    }
-
-    setMensajeExito(
-      "Tratamiento registrado correctamente"
+  if (tipo === "encía") {
+    return (
+      <div
+        className={`${size} flex items-center justify-center rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800`}
+      >
+        <svg
+          viewBox="0 0 180 180"
+          className="w-[80%] h-[80%]"
+          fill="none"
+        >
+          <path
+            d="M20 88C48 58 132 58 160 88V118C128 143 52 143 20 118V88Z"
+            fill="#f9a8b8"
+            opacity="0.85"
+          />
+          <path
+            d="M44 75C42 55 52 39 66 40C80 41 86 57 84 78"
+            fill="white"
+            stroke="currentColor"
+            strokeWidth="4"
+            className="text-slate-300 dark:text-slate-500"
+          />
+          <path
+            d="M96 78C94 57 100 41 114 40C128 39 138 55 136 75"
+            fill="white"
+            stroke="currentColor"
+            strokeWidth="4"
+            className="text-slate-300 dark:text-slate-500"
+          />
+          <path
+            d="M30 102C70 116 110 116 150 102"
+            stroke="currentColor"
+            strokeWidth="6"
+            strokeLinecap="round"
+            className="text-rose-500"
+          />
+        </svg>
+      </div>
     );
-
-    setTimeout(() => {
-
-      setMensajeExito("");
-
-    }, 3000);
-
-    setNombreTratamiento("");
-
-    setDescripcion("");
-
-    setCosto("");
-
-    await cargarTratamientos(paciente.id);
-
-    await cargarTodosTratamientos();
-
-  };
-    /* ==========================
-      VOLVER BUSQUEDA
-  ========================== */
-
- const volverBusqueda = () => {
-
-  setMostrarModalPaciente(false);
-
-  setPaciente(null);
-
-  setDni("");
-
-  setNombreTratamiento("");
-
-  setDescripcion("");
-
-  setCosto("");
-
-  setTratamientos([]);
-
-  setMostrarHistorial(false);
-
-  setPestanaPaciente("registro");
-
-}
-  /* ==========================
-      CAMBIAR ESTADO
-  ========================== */
-
-  const cambiarEstado = async (
-    tratamientoId: number,
-    nuevoEstado: string
-  ) => {
-
-    const { error } = await supabase
-
-      .from("tratamientos")
-
-      .update({
-        estado: nuevoEstado
-      })
-
-      .eq("id", tratamientoId);
-
-    if (error) {
-
-      console.error(error);
-
-      return;
-
-    }
-
-    if (paciente) {
-
-      await cargarTratamientos(
-        paciente.id
-      );
-
-    }
-
-    await cargarTodosTratamientos();
-
-  };
-
-  /* ==========================
-          RENDER
-  ========================== */
+  }
 
   return (
+    <div
+      className={`${size} flex items-center justify-center rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800`}
+    >
+      <svg
+        viewBox="0 0 180 180"
+        className="w-[80%] h-[80%]"
+        fill="none"
+      >
+        <path
+          d="M55 32C39 45 34 68 40 98C45 122 57 145 70 151C79 155 86 144 90 132C94 144 101 155 110 151C123 145 135 122 140 98C146 68 141 45 125 32C106 17 74 17 55 32Z"
+          fill="white"
+          stroke="currentColor"
+          strokeWidth="5"
+          className="text-slate-300 dark:text-slate-500"
+        />
 
-    <div className="space-y-8">
-
-      {/* ==========================
-              HEADER
-      ========================== */}
-
-      <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-6">
-
-        <div>
-
-          <h1 className="text-4xl font-black text-white">
-
-            Gestión de Tratamientos
-
-          </h1>
-
-          <p className="text-slate-400 mt-2 text-lg">
-
-            Administración completa de tratamientos odontológicos.
-
-          </p>
-
-        </div>
-
-        <div className="bg-cyan-500/10 border border-cyan-500/30 rounded-3xl px-6 py-5">
-
-          <p className="text-cyan-300 text-sm">
-
-            Total registrados
-
-          </p>
-
-          <h2 className="text-5xl font-black text-cyan-400 mt-1">
-
-            {todosTratamientos.length}
-
-          </h2>
-
-        </div>
-
-      </div>
-
-      {/* ==========================
-            DASHBOARD
-      ========================== */}
-
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-
-        <div className="rounded-3xl bg-gradient-to-br from-yellow-500/20 to-yellow-600/10 border border-yellow-500/30 p-6">
-
-          <div className="flex justify-between items-center">
-
-            <div>
-
-              <p className="text-yellow-300 text-sm">
-
-                Pendientes
-
-              </p>
-
-              <h2 className="text-5xl font-black text-yellow-400 mt-3">
-
-                {pendientes}
-
-              </h2>
-
-            </div>
-
-            <Clock3
-              className="w-11 h-11 text-yellow-400"
+        {tipo === "molar" && (
+          <>
+            <path
+              d="M57 53C67 47 78 47 90 54"
+              stroke="currentColor"
+              strokeWidth="5"
+              strokeLinecap="round"
+              className="text-cyan-500"
             />
-
-          </div>
-
-        </div>
-
-        <div className="rounded-3xl bg-gradient-to-br from-blue-500/20 to-blue-600/10 border border-blue-500/30 p-6">
-
-          <div className="flex justify-between items-center">
-
-            <div>
-
-              <p className="text-blue-300 text-sm">
-
-                En proceso
-
-              </p>
-
-              <h2 className="text-5xl font-black text-blue-400 mt-3">
-
-                {proceso}
-
-              </h2>
-
-            </div>
-
-            <Activity
-              className="w-11 h-11 text-blue-400"
+            <path
+              d="M123 53C113 47 102 47 90 54"
+              stroke="currentColor"
+              strokeWidth="5"
+              strokeLinecap="round"
+              className="text-cyan-500"
             />
-
-          </div>
-
-        </div>
-
-        <div className="rounded-3xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 border border-emerald-500/30 p-6">
-
-          <div className="flex justify-between items-center">
-
-            <div>
-
-              <p className="text-emerald-300 text-sm">
-
-                Finalizados
-
-              </p>
-
-              <h2 className="text-5xl font-black text-emerald-400 mt-3">
-
-                {finalizados}
-
-              </h2>
-
-            </div>
-
-            <Check
-              className="w-11 h-11 text-emerald-400"
+            <path
+              d="M90 54V125"
+              stroke="currentColor"
+              strokeWidth="4"
+              strokeDasharray="7 7"
+              className="text-violet-500"
             />
-
-          </div>
-
-        </div>
-
-        <div className="rounded-3xl bg-gradient-to-br from-cyan-500/20 to-cyan-600/10 border border-cyan-500/30 p-6">
-
-          <div className="flex justify-between items-center">
-
-            <div>
-
-              <p className="text-cyan-300 text-sm">
-
-                Valor Total
-
-              </p>
-
-              <h2 className="text-4xl font-black text-cyan-400 mt-3">
-
-                S/ {totalCosto.toFixed(2)}
-
-              </h2>
-
-            </div>
-
-            <ClipboardList
-              className="w-11 h-11 text-cyan-400"
-            />
-
-          </div>
-
-        </div>
-
-      </div>
-            {/* ==========================
-            BUSCAR PACIENTE
-      ========================== */}
-
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl p-7">
-
-        <div className="mb-6">
-
-          <h2 className="text-2xl font-bold text-white">
-
-            Buscar Paciente
-
-          </h2>
-
-          <p className="text-slate-400 mt-1">
-
-            Ingresa el DNI del paciente para administrar sus tratamientos.
-
-          </p>
-
-        </div>
-
-        <div className="flex flex-col md:flex-row gap-4">
-
-          <div className="relative flex-1">
-
-            <Search
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"
-              size={20}
-            />
-
-            <input
-              type="text"
-              value={dni}
-              onChange={(e) => setDni(e.target.value)}
-              placeholder="Ingrese el DNI..."
-              className="w-full bg-slate-950 border border-slate-800 rounded-2xl pl-12 pr-4 py-4 text-white outline-none focus:ring-2 focus:ring-cyan-500"
-            />
-
-          </div>
-
-          <button
-            onClick={buscarPaciente}
-            className="px-8 py-4 rounded-2xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold transition"
-          >
-
-            Buscar
-
-          </button>
-
-        </div>
-
-        {loading && (
-
-          <div className="mt-5">
-
-            <p className="text-cyan-400 font-semibold">
-
-              Buscando paciente...
-
-            </p>
-
-          </div>
-
+          </>
         )}
 
-      </div>
+        {tipo === "diente" && (
+          <path
+            d="M90 46V125"
+            stroke="currentColor"
+            strokeWidth="4"
+            strokeDasharray="7 7"
+            className="text-cyan-500"
+          />
+        )}
+      </svg>
+    </div>
+  );
+};
 
-      
-{/* ==========================================
-      CONTENIDO DEL MODAL (lo moveremos aquí)
-========================================== */}
+export const TratamientosPanel = () => {
+  const [categoriaSeleccionada, setCategoriaSeleccionada] =
+    useState("Todos");
 
-{mostrarModalPaciente && paciente && (
+  const [buscarTratamiento, setBuscarTratamiento] = useState("");
 
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-6">
+  const [tratamientoSeleccionado, setTratamientoSeleccionado] =
+    useState<Tratamiento | null>(null);
 
-    <div className="bg-slate-900 border border-slate-700 rounded-3xl shadow-2xl w-full max-w-7xl max-h-[92vh] overflow-hidden">
+  const tratamientosFiltrados = useMemo(() => {
+    const texto = buscarTratamiento.trim().toLowerCase();
 
-      {/* CABECERA */}
+    return tratamientos.filter((tratamiento) => {
+      const coincideCategoria =
+        categoriaSeleccionada === "Todos" ||
+        tratamiento.categoria === categoriaSeleccionada;
 
-      <div className="px-8 py-6 border-b border-slate-800 flex items-center justify-between">
+      const coincideBusqueda =
+        !texto ||
+        tratamiento.nombre.toLowerCase().includes(texto) ||
+        tratamiento.categoria.toLowerCase().includes(texto) ||
+        tratamiento.descripcion.toLowerCase().includes(texto);
 
-        <div className="flex items-center gap-5">
+      return coincideCategoria && coincideBusqueda;
+    });
+  }, [categoriaSeleccionada, buscarTratamiento]);
 
-          <div className="w-16 h-16 rounded-full bg-cyan-500/10 flex items-center justify-center">
+  const totalTratamientos = tratamientos.length;
 
-            <User
-              className="text-cyan-400"
-              size={34}
-            />
+  const categoriasActivas = new Set(
+    tratamientos.map((tratamiento) => tratamiento.categoria)
+  ).size;
 
+  const precioPromedio =
+    tratamientos.reduce(
+      (total, tratamiento) => total + tratamiento.precio,
+      0
+    ) / tratamientos.length;
+
+  return (
+    <div className="space-y-6 pb-10">
+      {/* =====================================================
+          ENCABEZADO
+      ====================================================== */}
+
+      <div className="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-5">
+        <div className="flex items-start gap-4">
+          <div
+            className="
+              w-14
+              h-14
+              shrink-0
+              rounded-2xl
+              bg-cyan-50
+              dark:bg-cyan-500/10
+              border
+              border-cyan-200
+              dark:border-cyan-500/20
+              flex
+              items-center
+              justify-center
+            "
+          >
+            <span className="text-2xl">🦷</span>
           </div>
 
           <div>
+            <h1
+              className="
+                text-3xl
+                font-extrabold
+                tracking-tight
+                text-slate-900
+                dark:text-white
+              "
+            >
+              Guía de Tratamientos Odontológicos
+            </h1>
 
-            <h2 className="text-3xl font-black text-white">
-
-              {paciente.nombres} {paciente.apellidos}
-
-            </h2>
-
-            <p className="text-slate-400">
-
-              DNI: {paciente.dni}
-
+            <p
+              className="
+                text-sm
+                sm:text-base
+                text-slate-500
+                dark:text-slate-400
+                mt-1.5
+              "
+            >
+              Conoce los procedimientos, sus beneficios e indicaciones
+              clínicas.
             </p>
-
-            <p className="text-slate-500">
-
-              {paciente.telefono || "Sin teléfono"}
-
-            </p>
-
           </div>
-
         </div>
 
-        <button
+        {/* BUSCADOR */}
 
-          onClick={volverBusqueda}
+        <div className="relative w-full xl:w-[340px]">
+          <span
+            className="
+              absolute
+              left-4
+              top-1/2
+              -translate-y-1/2
+              text-slate-400
+              dark:text-slate-500
+            "
+          >
+            🔎
+          </span>
 
-          className="px-6 py-3 rounded-xl bg-red-500 hover:bg-red-400 text-white font-bold"
-
-        >
-
-          Cerrar
-
-        </button>
-
+          <input
+            type="text"
+            value={buscarTratamiento}
+            onChange={(e) =>
+              setBuscarTratamiento(e.target.value)
+            }
+            placeholder="Buscar tratamiento..."
+            className="
+              w-full
+              h-12
+              pl-11
+              pr-4
+              rounded-xl
+              bg-white
+              dark:bg-slate-900
+              border
+              border-slate-200
+              dark:border-slate-800
+              text-slate-900
+              dark:text-white
+              placeholder:text-slate-400
+              dark:placeholder:text-slate-600
+              outline-none
+              transition
+              focus:border-cyan-500
+              focus:ring-4
+              focus:ring-cyan-500/10
+            "
+          />
+        </div>
       </div>
 
-      {/* AQUÍ IRÁN LAS PESTAÑAS */}
+      {/* =====================================================
+          CATEGORÍAS
+      ====================================================== */}
 
-      {/* ==========================
-        PESTAÑAS
-========================== */}
+      <div
+        className="
+          flex
+          gap-2
+          overflow-x-auto
+          pb-1
+          scrollbar-hide
+        "
+      >
+        {categorias.map((categoria) => {
+          const activa =
+            categoriaSeleccionada === categoria;
 
-<div className="border-b border-slate-800">
+          return (
+            <button
+              key={categoria}
+              type="button"
+              onClick={() =>
+                setCategoriaSeleccionada(categoria)
+              }
+              className={`
+                shrink-0
+                px-4
+                py-2.5
+                rounded-xl
+                text-sm
+                font-semibold
+                border
+                transition
+                ${
+                  activa
+                    ? "bg-cyan-600 border-cyan-600 text-white shadow-sm"
+                    : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-cyan-300 dark:hover:border-cyan-500/30"
+                }
+              `}
+            >
+              {categoria}
+            </button>
+          );
+        })}
+      </div>
 
-  <div className="flex">
+      {/* =====================================================
+          RESUMEN
+      ====================================================== */}
 
-    <button
-      onClick={() => setPestanaPaciente("registro")}
-      className={`flex-1 py-4 font-bold transition ${
-        pestanaPaciente === "registro"
-          ? "bg-cyan-600 text-white"
-          : "bg-slate-900 text-slate-400 hover:bg-slate-800"
-      }`}
-    >
-      ➕ Registrar Tratamiento
-    </button>
-
-    <button
-      onClick={() => setPestanaPaciente("historial")}
-      className={`flex-1 py-4 font-bold transition ${
-        pestanaPaciente === "historial"
-          ? "bg-cyan-600 text-white"
-          : "bg-slate-900 text-slate-400 hover:bg-slate-800"
-      }`}
-    >
-      📋 Historial
-    </button>
-
-  </div>
-
-</div>
-
-<div className="p-8">
-
-  {pestanaPaciente === "registro" && (
-
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-7">
-
-          <div className="flex items-center gap-3 mb-6">
-
-            <PlusCircle
-              className="text-cyan-400"
-              size={28}
-            />
-
-            <h2 className="text-2xl font-bold text-white">
-
-              Registrar Nuevo Tratamiento
-
-            </h2>
-
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-5">
-
+      <div
+        className="
+          grid
+          grid-cols-1
+          sm:grid-cols-2
+          xl:grid-cols-3
+          gap-4
+        "
+      >
+        <div
+          className="
+            rounded-2xl
+            border
+            border-slate-200
+            dark:border-slate-800
+            bg-white
+            dark:bg-slate-900
+            p-5
+            shadow-sm
+            dark:shadow-none
+          "
+        >
+          <div className="flex items-center justify-between">
             <div>
-
-              <label className="text-slate-400 text-sm">
-
-                Tratamiento
-
-              </label>
-
-              <input
-                value={nombreTratamiento}
-                onChange={(e)=>setNombreTratamiento(e.target.value)}
-                className="mt-2 w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-white"
-              />
-
-            </div>
-
-            <div>
-
-              <label className="text-slate-400 text-sm">
-
-                Costo
-
-              </label>
-
-              <input
-                type="number"
-                value={costo}
-                onChange={(e)=>setCosto(e.target.value)}
-                className="mt-2 w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-white"
-              />
-
-            </div>
-
-          </div>
-
-          <div className="mt-5">
-
-            <label className="text-slate-400 text-sm">
-
-              Descripción
-
-            </label>
-
-            <textarea
-              rows={5}
-              value={descripcion}
-              onChange={(e)=>setDescripcion(e.target.value)}
-              className="mt-2 w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-white"
-            />
-
-          </div>
-
-          <button
-            onClick={guardarTratamiento}
-            className="mt-6 bg-cyan-600 hover:bg-cyan-500 px-7 py-4 rounded-2xl text-white font-bold"
-          >
-
-            Registrar Tratamiento
-
-          </button>
-
-          {mensajeExito && (
-
-            <div className="mt-5 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-4">
-
-              <div className="flex items-center gap-3">
-
-                <CheckCircle
-                  className="text-emerald-400"
-                  size={22}
-                />
-
-                <p className="text-emerald-400 font-semibold">
-
-                  {mensajeExito}
-
-                </p>
-
-              </div>
-
-            </div>
-
-          )}
-
-        </div>
-
-      )}
-            
-            {/* ==========================
-          HISTORIAL DEL PACIENTE
-      ========================== */}
-
-      {pestanaPaciente === "historial" && (
-
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-7">
-
-          <div className="flex items-center justify-between mb-6">
-
-            <div>
-
-              <h2 className="text-2xl font-bold text-white">
-
-                Historial de Tratamientos
-
-              </h2>
-
-              <p className="text-slate-400 mt-1">
-
-                Total registrados: {tratamientos.length}
-
+              <p className="text-xs uppercase tracking-wider font-bold text-slate-500 dark:text-slate-400">
+                Total de tratamientos
               </p>
 
+              <p className="text-3xl font-extrabold text-slate-900 dark:text-white mt-2">
+                {totalTratamientos}
+              </p>
             </div>
 
-            <button
-
-              onClick={() =>
-                setMostrarHistorial(!mostrarHistorial)
-              }
-
-              className="px-5 py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white"
-
-            >
-
-              {mostrarHistorial
-                ? "Ocultar historial"
-                : "Ver historial"}
-
-            </button>
-
+            <div className="w-11 h-11 rounded-xl bg-cyan-50 dark:bg-cyan-500/10 flex items-center justify-center text-xl">
+              🦷
+            </div>
           </div>
-
-          {mostrarHistorial && (
-
-            tratamientos.length === 0 ? (
-
-              <div className="text-center py-12 text-slate-500">
-
-                Este paciente aún no tiene tratamientos registrados.
-
-              </div>
-
-            ) : (
-
-              <div className="overflow-x-auto">
-
-                <table className="w-full">
-
-                  <thead>
-
-                    <tr className="border-b border-slate-800">
-
-                      <th className="p-4 text-left text-slate-400">
-
-                        Tratamiento
-
-                      </th>
-
-                      <th className="p-4 text-left text-slate-400">
-
-                        Estado
-
-                      </th>
-
-                      <th className="p-4 text-left text-slate-400">
-
-                        Costo
-
-                      </th>
-
-                      <th className="p-4 text-left text-slate-400">
-
-                        Fecha
-
-                      </th>
-
-                      <th className="p-4 text-center text-slate-400">
-
-                        Acción
-
-                      </th>
-
-                    </tr>
-
-                  </thead>
-
-                  <tbody>
-
-                    {tratamientos.map((tratamiento) => (
-
-                      <tr
-
-                        key={tratamiento.id}
-
-                        className="border-b border-slate-800 hover:bg-slate-800/40 transition"
-
-                      >
-
-                        <td className="p-4">
-
-                          <div>
-
-                            <p className="font-bold text-white">
-
-                              {tratamiento.nombre_tratamiento}
-
-                            </p>
-
-                            <p className="text-slate-500 text-sm mt-1">
-
-                              {tratamiento.descripcion || "Sin descripción"}
-
-                            </p>
-
-                          </div>
-
-                        </td>
-
-                        <td className="p-4">
-
-                          <select
-
-                            value={tratamiento.estado}
-
-                            onChange={(e)=>
-
-                              cambiarEstado(
-
-                                tratamiento.id,
-
-                                e.target.value
-
-                              )
-
-                            }
-
-                            className="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white"
-
-                          >
-
-                            <option value="pendiente">
-
-                              Pendiente
-
-                            </option>
-
-                            <option value="en proceso">
-
-                              En proceso
-
-                            </option>
-
-                            <option value="finalizado">
-
-                              Finalizado
-
-                            </option>
-
-                          </select>
-
-                        </td>
-
-                        <td className="p-4 font-bold text-cyan-400">
-
-                          S/ {Number(tratamiento.costo).toFixed(2)}
-
-                        </td>
-
-                        <td className="p-4 text-slate-400">
-
-                          {tratamiento.fecha_inicio}
-
-                        </td>
-
-                        <td className="p-4 text-center">
-
-                          <button
-
-                            onClick={() => {
-
-                              setTratamientoSeleccionado(tratamiento);
-
-                              setEditNombre(
-                                tratamiento.nombre_tratamiento
-                              );
-
-                              setEditDescripcion(
-                                tratamiento.descripcion
-                              );
-
-                              setEditCosto(
-                                String(tratamiento.costo)
-                              );
-
-                              setEditEstado(
-                                tratamiento.estado
-                              );
-
-                              setModoEdicion(false);
-
-                            }}
-
-                            className="bg-cyan-600 hover:bg-cyan-500 px-4 py-2 rounded-xl text-white flex items-center gap-2 mx-auto"
-
-                          >
-
-                            <Eye size={18} />
-
-                            Ver
-
-                          </button>
-
-                        </td>
-
-                      </tr>
-
-                    ))}
-
-                  </tbody>
-
-                </table>
-
-              </div>
-
-            )
-
-          )}
-
         </div>
 
-      )}
-            </div> {/* fin p-8 */}
+        <div
+          className="
+            rounded-2xl
+            border
+            border-slate-200
+            dark:border-slate-800
+            bg-white
+            dark:bg-slate-900
+            p-5
+            shadow-sm
+            dark:shadow-none
+          "
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-wider font-bold text-slate-500 dark:text-slate-400">
+                Categorías clínicas
+              </p>
 
-    </div> {/* fin ventana modal */}
-
-  </div> 
-
-)}
-
-            {/* ==========================
-            MODAL DETALLE
-      ========================== */}
-
-      {tratamientoSeleccionado && (
-
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-6">
-
-          <div className="w-full max-w-4xl bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl p-8">
-
-            <div className="flex items-center justify-between mb-8">
-
-              <div>
-
-                <h2 className="text-3xl font-black text-white">
-
-                  Detalle del Tratamiento
-
-                </h2>
-
-                <p className="text-slate-400 mt-1">
-
-                  Consulta o modifica la información.
-
-                </p>
-
-              </div>
-
-              <button
-
-                onClick={() => {
-
-                  setTratamientoSeleccionado(null);
-
-                  setModoEdicion(false);
-
-                }}
-
-                className="px-5 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white"
-
-              >
-
-                Cerrar
-
-              </button>
-
+              <p className="text-3xl font-extrabold text-slate-900 dark:text-white mt-2">
+                {categoriasActivas}
+              </p>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-6">
-
-              <div>
-
-                <label className="text-slate-400 text-sm">
-
-                  Tratamiento
-
-                </label>
-
-                {modoEdicion ? (
-
-                  <input
-                    value={editNombre}
-                    onChange={(e)=>setEditNombre(e.target.value)}
-                    className="mt-2 w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-white"
-                  />
-
-                ) : (
-
-                  <p className="mt-2 text-2xl font-bold text-white">
-
-                    {tratamientoSeleccionado.nombre_tratamiento}
-
-                  </p>
-
-                )}
-
-              </div>
-
-              <div>
-
-                <label className="text-slate-400 text-sm">
-
-                  Estado
-
-                </label>
-
-                {modoEdicion ? (
-
-                  <select
-                    value={editEstado}
-                    onChange={(e)=>setEditEstado(e.target.value)}
-                    className="mt-2 w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-white"
-                  >
-
-                    <option value="pendiente">
-                      Pendiente
-                    </option>
-
-                    <option value="en proceso">
-                      En proceso
-                    </option>
-
-                    <option value="finalizado">
-                      Finalizado
-                    </option>
-
-                  </select>
-
-                ) : (
-
-                  <p className="mt-2 text-cyan-400 font-bold">
-
-                    {tratamientoSeleccionado.estado}
-
-                  </p>
-
-                )}
-
-              </div>
-
-              <div>
-
-                <label className="text-slate-400 text-sm">
-
-                  Costo
-
-                </label>
-
-                {modoEdicion ? (
-
-                  <input
-                    type="number"
-                    value={editCosto}
-                    onChange={(e)=>setEditCosto(e.target.value)}
-                    className="mt-2 w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-white"
-                  />
-
-                ) : (
-
-                  <p className="mt-2 text-3xl font-black text-emerald-400">
-
-                    S/ {Number(tratamientoSeleccionado.costo).toFixed(2)}
-
-                  </p>
-
-                )}
-
-              </div>
-
-              <div>
-
-                <label className="text-slate-400 text-sm">
-
-                  Fecha
-
-                </label>
-
-                <p className="mt-2 text-white">
-
-                  {tratamientoSeleccionado.fecha_inicio}
-
-                </p>
-
-              </div>
-
-              <div className="md:col-span-2">
-
-                <label className="text-slate-400 text-sm">
-
-                  Descripción
-
-                </label>
-
-                {modoEdicion ? (
-
-                  <textarea
-                    rows={6}
-                    value={editDescripcion}
-                    onChange={(e)=>setEditDescripcion(e.target.value)}
-                    className="mt-2 w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-white"
-                  />
-
-                ) : (
-
-                  <div className="mt-2 bg-slate-950 border border-slate-800 rounded-xl p-5 text-white">
-
-                    {tratamientoSeleccionado.descripcion || "Sin descripción"}
-
-                  </div>
-
-                )}
-
-              </div>
-
+            <div className="w-11 h-11 rounded-xl bg-violet-50 dark:bg-violet-500/10 flex items-center justify-center text-xl">
+              ▦
             </div>
-                        {/* ==========================
-                  BOTONES
-            ========================== */}
+          </div>
+        </div>
 
-            <div className="flex justify-end gap-4 mt-8">
+        <div
+          className="
+            rounded-2xl
+            border
+            border-slate-200
+            dark:border-slate-800
+            bg-white
+            dark:bg-slate-900
+            p-5
+            shadow-sm
+            dark:shadow-none
+            sm:col-span-2
+            xl:col-span-1
+          "
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-wider font-bold text-slate-500 dark:text-slate-400">
+                Precio referencial promedio
+              </p>
 
-              {modoEdicion ? (
-
-                <>
-
-                  <button
-
-                    onClick={() => setModoEdicion(false)}
-
-                    className="px-6 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 text-white"
-
-                  >
-
-                    Cancelar
-
-                  </button>
-
-                  <button
-
-                    onClick={async () => {
-
-                      const { error } = await supabase
-
-                        .from("tratamientos")
-
-                        .update({
-
-                          nombre_tratamiento: editNombre,
-
-                          descripcion: editDescripcion,
-
-                          costo: Number(editCosto),
-
-                          estado: editEstado
-
-                        })
-
-                        .eq("id", tratamientoSeleccionado.id);
-
-                      if (error) {
-
-                        alert("Error al actualizar");
-
-                        return;
-
-                      }
-
-                      setMensajeActualizacion(
-
-                        "Tratamiento actualizado correctamente"
-
-                      );
-
-                      setTimeout(() => {
-
-                        setMensajeActualizacion("");
-
-                      }, 3000);
-
-                      await cargarTodosTratamientos();
-
-                      if (paciente) {
-
-                        await cargarTratamientos(
-
-                          paciente.id
-
-                        );
-
-                      }
-
-                      setTratamientoSeleccionado(null);
-
-                      setModoEdicion(false);
-
-                    }}
-
-                    className="px-6 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-bold"
-
-                  >
-
-                    Guardar Cambios
-
-                  </button>
-
-                </>
-
-              ) : (
-
-                <button
-
-                  onClick={() => setModoEdicion(true)}
-
-                  className="px-6 py-3 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-white font-bold"
-
-                >
-
-                  Editar
-
-                </button>
-
-              )}
-
+              <p className="text-3xl font-extrabold text-cyan-600 dark:text-cyan-400 mt-2">
+                S/ {precioPromedio.toFixed(2)}
+              </p>
             </div>
 
-            {mensajeActualizacion && (
-
-              <div className="mt-6 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-4">
-
-                <div className="flex items-center gap-3">
-
-                  <CheckCircle
-
-                    className="text-emerald-400"
-
-                    size={22}
-
-                  />
-
-                  <p className="text-emerald-400 font-semibold">
-
-                    {mensajeActualizacion}
-
-                  </p>
-
-                </div>
-
-              </div>
-
-            )}
-
+            <div className="w-11 h-11 rounded-xl bg-cyan-50 dark:bg-cyan-500/10 flex items-center justify-center text-xl">
+              S/
+            </div>
           </div>
-
         </div>
-
-      )}
-            {/* ==========================
-            TABLA GENERAL
-      ========================== */}
-
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden">
-
-        <div className="px-8 py-6 border-b border-slate-800 flex items-center justify-between">
-
-          <div>
-
-            <h2 className="text-3xl font-black text-white">
-
-              Todos los Tratamientos
-
-            </h2>
-
-            <p className="text-slate-400 mt-1">
-
-              Historial general del consultorio
-
-            </p>
-
-          </div>
-
-          <div className="bg-cyan-500/10 border border-cyan-500/30 rounded-2xl px-5 py-3">
-
-            <span className="text-cyan-400 font-bold">
-
-              {todosTratamientos.length} registros
-
-            </span>
-
-          </div>
-
-        </div>
-
-        <div className="overflow-x-auto">
-
-          <table className="w-full">
-
-            <thead className="bg-slate-950">
-
-              <tr>
-
-                <th className="p-4 text-left text-slate-400">
-
-                  Paciente
-
-                </th>
-
-                <th className="p-4 text-left text-slate-400">
-
-                  Tratamiento
-
-                </th>
-
-                <th className="p-4 text-left text-slate-400">
-
-                  Estado
-
-                </th>
-
-                <th className="p-4 text-left text-slate-400">
-
-                  Costo
-
-                </th>
-
-                <th className="p-4 text-left text-slate-400">
-
-                  Fecha
-
-                </th>
-
-              </tr>
-
-            </thead>
-
-            <tbody>
-
-              {todosTratamientos.map((t) => (
-
-                <tr
-
-                  key={t.id}
-
-                  className="border-t border-slate-800 hover:bg-slate-800/40 transition"
-
-                >
-
-                  <td className="p-4">
-
-                    <p className="font-semibold text-white">
-
-                      {t.pacientes?.nombres} {t.pacientes?.apellidos}
-
-                    </p>
-
-                    <p className="text-xs text-slate-500">
-
-                      DNI {t.pacientes?.dni}
-
-                    </p>
-
-                  </td>
-
-                  <td className="p-4 text-white">
-
-                    {t.nombre_tratamiento}
-
-                  </td>
-
-                  <td className="p-4">
-
-                    <span
-
-                      className={`px-3 py-1 rounded-full text-xs font-bold ${
-                        t.estado === "pendiente"
-                          ? "bg-yellow-500/10 text-yellow-400"
-                          : t.estado === "en proceso"
-                          ? "bg-blue-500/10 text-blue-400"
-                          : "bg-emerald-500/10 text-emerald-400"
-                      }`}
-
-                    >
-
-                      {t.estado}
-
-                    </span>
-
-                  </td>
-
-                  <td className="p-4 text-cyan-400 font-bold">
-
-                    S/ {Number(t.costo).toFixed(2)}
-
-                  </td>
-
-                  <td className="p-4 text-slate-400">
-
-                    {t.fecha_inicio}
-
-                  </td>
-
-                </tr>
-
-              ))}
-
-            </tbody>
-
-          </table>
-
-        </div>
-
       </div>
 
+      {/* =====================================================
+          CABECERA DEL CATÁLOGO
+      ====================================================== */}
+
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+            Catálogo clínico
+          </h2>
+
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            Procedimientos odontológicos disponibles para consulta.
+          </p>
+        </div>
+
+        <span
+          className="
+            hidden
+            sm:inline-flex
+            items-center
+            px-3
+            py-1.5
+            rounded-full
+            bg-cyan-50
+            dark:bg-cyan-500/10
+            border
+            border-cyan-200
+            dark:border-cyan-500/20
+            text-cyan-700
+            dark:text-cyan-300
+            text-xs
+            font-bold
+          "
+        >
+          {tratamientosFiltrados.length} resultados
+        </span>
+      </div>
+
+      {/* =====================================================
+          TARJETAS
+      ====================================================== */}
+
+      {tratamientosFiltrados.length > 0 ? (
+        <div
+          className="
+            grid
+            grid-cols-1
+            lg:grid-cols-2
+            2xl:grid-cols-3
+            gap-5
+          "
+        >
+          {tratamientosFiltrados.map((tratamiento) => {
+            const style = getCategoriaStyle(
+              tratamiento.categoria
+            );
+
+            return (
+              <article
+                key={tratamiento.id}
+                className="
+                  group
+                  relative
+                  overflow-hidden
+                  rounded-2xl
+                  border
+                  border-slate-200
+                  dark:border-slate-800
+                  bg-white
+                  dark:bg-slate-900
+                  shadow-sm
+                  dark:shadow-none
+                  hover:border-cyan-300
+                  dark:hover:border-cyan-500/30
+                  hover:shadow-md
+                  transition
+                "
+              >
+                <div className="p-5">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="min-w-0">
+                      <span
+                        className={`
+                          inline-flex
+                          items-center
+                          px-2.5
+                          py-1
+                          rounded-full
+                          border
+                          text-[10px]
+                          uppercase
+                          tracking-wider
+                          font-extrabold
+                          ${style.badge}
+                        `}
+                      >
+                        {tratamiento.categoria}
+                      </span>
+
+                      <h3
+                        className="
+                          text-lg
+                          font-bold
+                          text-slate-900
+                          dark:text-white
+                          mt-3
+                        "
+                      >
+                        {tratamiento.nombre}
+                      </h3>
+
+                      <p
+                        className="
+                          text-sm
+                          leading-relaxed
+                          text-slate-500
+                          dark:text-slate-400
+                          mt-2
+                          line-clamp-3
+                        "
+                      >
+                        {tratamiento.descripcion}
+                      </p>
+                    </div>
+
+                    <ToothIllustration
+                      tipo={tratamiento.tipoDiente}
+                    />
+                  </div>
+
+                  {/* DATOS */}
+
+                  <div
+                    className="
+                      grid
+                      grid-cols-2
+                      gap-3
+                      mt-5
+                      pt-4
+                      border-t
+                      border-slate-100
+                      dark:border-slate-800
+                    "
+                  >
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500">
+                        Duración
+                      </p>
+
+                      <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 mt-1">
+                        {tratamiento.duracion}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500">
+                        Precio referencial
+                      </p>
+
+                      <p
+                        className={`
+                          text-sm
+                          font-bold
+                          mt-1
+                          ${style.accent}
+                        `}
+                      >
+                        S/ {tratamiento.precio.toFixed(2)}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* BOTÓN */}
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setTratamientoSeleccionado(
+                        tratamiento
+                      )
+                    }
+                    className="
+                      w-full
+                      mt-5
+                      py-2.5
+                      rounded-xl
+                      bg-slate-50
+                      dark:bg-slate-800
+                      border
+                      border-slate-200
+                      dark:border-slate-700
+                      text-sm
+                      font-semibold
+                      text-slate-700
+                      dark:text-slate-200
+                      hover:bg-cyan-600
+                      hover:border-cyan-600
+                      hover:text-white
+                      transition
+                    "
+                  >
+                    Ver información
+                    <span className="ml-2">→</span>
+                  </button>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      ) : (
+        <div
+          className="
+            rounded-2xl
+            border
+            border-dashed
+            border-slate-300
+            dark:border-slate-700
+            bg-white
+            dark:bg-slate-900
+            p-12
+            text-center
+          "
+        >
+          <div className="text-4xl mb-4">🔎</div>
+
+          <h3 className="font-bold text-slate-900 dark:text-white">
+            No encontramos tratamientos
+          </h3>
+
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
+            Intenta cambiar la búsqueda o seleccionar otra categoría.
+          </p>
+        </div>
+      )}
+
+      {/* =====================================================
+          DETALLE DEL TRATAMIENTO
+      ====================================================== */}
+
+      {tratamientoSeleccionado && (
+        <div
+          className="
+            fixed
+            inset-0
+            z-50
+            flex
+            items-center
+            justify-center
+            p-4
+            bg-slate-950/60
+            backdrop-blur-sm
+          "
+          onClick={() =>
+            setTratamientoSeleccionado(null)
+          }
+        >
+          <div
+            className="
+              w-full
+              max-w-5xl
+              max-h-[90vh]
+              overflow-y-auto
+              rounded-3xl
+              bg-white
+              dark:bg-slate-900
+              border
+              border-slate-200
+              dark:border-slate-800
+              shadow-2xl
+            "
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* CABECERA */}
+
+            <div
+              className="
+                relative
+                overflow-hidden
+                p-6
+                sm:p-8
+                border-b
+                border-slate-200
+                dark:border-slate-800
+              "
+            >
+              <button
+                type="button"
+                onClick={() =>
+                  setTratamientoSeleccionado(null)
+                }
+                className="
+                  absolute
+                  top-5
+                  right-5
+                  w-9
+                  h-9
+                  rounded-full
+                  bg-slate-100
+                  dark:bg-slate-800
+                  text-slate-500
+                  dark:text-slate-300
+                  hover:bg-slate-200
+                  dark:hover:bg-slate-700
+                  transition
+                "
+              >
+                ×
+              </button>
+
+              <div className="flex flex-col sm:flex-row gap-6 items-start">
+                <div className="flex-1 min-w-0">
+                  <span
+                    className={`
+                      inline-flex
+                      items-center
+                      px-3
+                      py-1.5
+                      rounded-full
+                      border
+                      text-xs
+                      uppercase
+                      tracking-wider
+                      font-extrabold
+                      ${getCategoriaStyle(
+                        tratamientoSeleccionado.categoria
+                      ).badge}
+                    `}
+                  >
+                    {tratamientoSeleccionado.categoria}
+                  </span>
+
+                  <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white mt-4 pr-8">
+                    {tratamientoSeleccionado.nombre}
+                  </h2>
+
+                  <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 leading-relaxed mt-3 max-w-2xl">
+                    {tratamientoSeleccionado.descripcion}
+                  </p>
+                </div>
+
+                <div className="self-center sm:self-auto">
+                  <ToothIllustration
+                    tipo={tratamientoSeleccionado.tipoDiente}
+                    large
+                  />
+                </div>
+              </div>
+
+              {/* DATOS RÁPIDOS */}
+
+              <div
+                className="
+                  grid
+                  grid-cols-2
+                  lg:grid-cols-3
+                  gap-3
+                  mt-7
+                "
+              >
+                <div className="rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 p-4">
+                  <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500">
+                    Duración
+                  </p>
+
+                  <p className="text-sm font-bold text-slate-800 dark:text-white mt-1">
+                    {tratamientoSeleccionado.duracion}
+                  </p>
+                </div>
+
+                <div className="rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 p-4">
+                  <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500">
+                    Sesiones
+                  </p>
+
+                  <p className="text-sm font-bold text-slate-800 dark:text-white mt-1">
+                    {tratamientoSeleccionado.sesiones}
+                  </p>
+                </div>
+
+                <div className="rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 p-4 col-span-2 lg:col-span-1">
+                  <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500">
+                    Precio referencial
+                  </p>
+
+                  <p className="text-sm font-bold text-cyan-600 dark:text-cyan-400 mt-1">
+                    S/{" "}
+                    {tratamientoSeleccionado.precio.toFixed(
+                      2
+                    )}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* CONTENIDO */}
+
+            <div className="p-6 sm:p-8">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* ¿QUÉ ES? */}
+
+                <section>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-9 h-9 rounded-xl bg-cyan-50 dark:bg-cyan-500/10 flex items-center justify-center text-cyan-600 dark:text-cyan-400">
+                      ℹ
+                    </div>
+
+                    <h3 className="font-bold text-slate-900 dark:text-white">
+                      ¿Qué es?
+                    </h3>
+                  </div>
+
+                  <p className="text-sm leading-7 text-slate-600 dark:text-slate-300">
+                    {tratamientoSeleccionado.queEs}
+                  </p>
+                </section>
+
+                {/* ¿PARA QUÉ SIRVE? */}
+
+                <section>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                      ✓
+                    </div>
+
+                    <h3 className="font-bold text-slate-900 dark:text-white">
+                      ¿Para qué sirve?
+                    </h3>
+                  </div>
+
+                  <ul className="space-y-3">
+                    {tratamientoSeleccionado.paraQueSirve.map(
+                      (item, index) => (
+                        <li
+                          key={index}
+                          className="flex items-start gap-3 text-sm text-slate-600 dark:text-slate-300"
+                        >
+                          <span className="mt-1 w-5 h-5 shrink-0 rounded-full bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xs font-bold">
+                            ✓
+                          </span>
+
+                          <span>{item}</span>
+                        </li>
+                      )
+                    )}
+                  </ul>
+                </section>
+
+                {/* ZONA */}
+
+                <section>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-9 h-9 rounded-xl bg-violet-50 dark:bg-violet-500/10 flex items-center justify-center">
+                      🦷
+                    </div>
+
+                    <h3 className="font-bold text-slate-900 dark:text-white">
+                      ¿En qué parte se realiza?
+                    </h3>
+                  </div>
+
+                  <div className="rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 p-5">
+                    <div className="flex flex-col sm:flex-row items-center gap-5">
+                      <ToothIllustration
+                        tipo={tratamientoSeleccionado.tipoDiente}
+                      />
+
+                      <div>
+                        <p className="text-xs uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500">
+                          Área de aplicación
+                        </p>
+
+                        <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 mt-2 leading-relaxed">
+                          {tratamientoSeleccionado.zona}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                {/* PROCEDIMIENTO */}
+
+                <section>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                      ≡
+                    </div>
+
+                    <h3 className="font-bold text-slate-900 dark:text-white">
+                      Procedimiento
+                    </h3>
+                  </div>
+
+                  <div className="space-y-3">
+                    {tratamientoSeleccionado.pasos.map(
+                      (paso, index) => (
+                        <div
+                          key={index}
+                          className="flex items-start gap-3"
+                        >
+                          <span className="w-7 h-7 shrink-0 rounded-full bg-cyan-50 dark:bg-cyan-500/10 border border-cyan-200 dark:border-cyan-500/20 text-cyan-600 dark:text-cyan-400 flex items-center justify-center text-xs font-bold">
+                            {String(index + 1).padStart(
+                              2,
+                              "0"
+                            )}
+                          </span>
+
+                          <p className="text-sm text-slate-600 dark:text-slate-300 pt-1">
+                            {paso}
+                          </p>
+                        </div>
+                      )
+                    )}
+                  </div>
+                </section>
+              </div>
+
+              {/* CERRAR */}
+
+              <div className="flex justify-end mt-8 pt-6 border-t border-slate-200 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setTratamientoSeleccionado(null)
+                  }
+                  className="
+                    w-full
+                    sm:w-auto
+                    px-6
+                    py-3
+                    rounded-xl
+                    bg-cyan-600
+                    hover:bg-cyan-500
+                    text-white
+                    font-semibold
+                    transition
+                    shadow-sm
+                  "
+                >
+                  Cerrar información
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
-
   );
-
 };

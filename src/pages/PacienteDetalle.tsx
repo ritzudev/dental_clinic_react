@@ -150,21 +150,19 @@ if (!paciente) {
     <div className="p-6 space-y-6">
 
 
-      {/* ODONTOGRAMA */}
-      <div className="bg-white p-4 rounded shadow">
-        <h2 className="text-xl font-bold mb-4">
-          Odontograma
-        </h2>
-
+   {/* ODONTOGRAMA */}
+<div className="bg-white dark:bg-slate-950 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800">
+  <h2 className="text-xl font-bold mb-4 text-slate-800 dark:text-white">
+    Odontograma
+  </h2>
 
   <Odontograma
     paciente={paciente}
     medico={medico}
     medicoId={medicoId ?? 0}
-  citaId={citaId ?? 0}
+    citaId={citaId ?? 0}
   />
-
-      </div>
+</div>
 
     </div>
   );

@@ -27,57 +27,26 @@ const crearConsultas = (cantidad: number): Consulta[] => {
 };
 
 export const PlanTratamientoPanel = () => {
-
-  // =====================================================
-  // PACIENTE
-  // =====================================================
-
   const [buscarPaciente, setBuscarPaciente] = useState("");
-
   const [pacientes, setPacientes] = useState<Paciente[]>([]);
-
   const [pacienteSeleccionado, setPacienteSeleccionado] =
     useState<Paciente | null>(null);
 
-
-  // =====================================================
-  // PLAN DE TRATAMIENTO
-  // =====================================================
-
   const [cantidadConsultas, setCantidadConsultas] = useState(4);
-
   const [costoTotal, setCostoTotal] = useState(0);
-
-const [tituloPlan, setTituloPlan] = useState("");
-
-
+  const [tituloPlan, setTituloPlan] = useState("");
   const [consultas, setConsultas] = useState<Consulta[]>(
     crearConsultas(4)
   );
 
-
-  // =====================================================
-  // ESTADOS
-  // =====================================================
-
   const [guardando, setGuardando] = useState(false);
-
   const [mensaje, setMensaje] = useState("");
 
-
-  // =====================================================
-  // BUSCAR PACIENTES
-  // =====================================================
-
   useEffect(() => {
-
     buscarPacientes();
-
   }, [buscarPaciente]);
 
-
   const buscarPacientes = async () => {
-
     if (!buscarPaciente.trim()) {
       setPacientes([]);
       return;
@@ -99,51 +68,25 @@ const [tituloPlan, setTituloPlan] = useState("");
     setPacientes(data || []);
   };
 
-
-  // =====================================================
-  // SELECCIONAR PACIENTE
-  // =====================================================
-
   const seleccionarPaciente = (paciente: Paciente) => {
-
     setPacienteSeleccionado(paciente);
-
     setBuscarPaciente(
       `${paciente.nombres} ${paciente.apellidos}`
     );
-
     setPacientes([]);
   };
 
-
-  // =====================================================
-  // LIMPIAR TODO
-  // =====================================================
-
   const limpiarPlan = () => {
-
     setBuscarPaciente("");
-
     setPacientes([]);
-
     setPacienteSeleccionado(null);
-
     setCantidadConsultas(4);
-
     setCostoTotal(0);
-
     setConsultas(crearConsultas(4));
-
     setMensaje("");
   };
 
-
-  // =====================================================
-  // CAMBIAR CANTIDAD DE CONSULTAS
-  // =====================================================
-
   const cambiarCantidadConsultas = (cantidad: number) => {
-
     if (cantidad < 1) {
       cantidad = 1;
     }
@@ -155,11 +98,9 @@ const [tituloPlan, setTituloPlan] = useState("");
     setCantidadConsultas(cantidad);
 
     setConsultas((anteriores) => {
-
       const nuevasConsultas: Consulta[] = [];
 
       for (let i = 1; i <= cantidad; i++) {
-
         const existente = anteriores.find(
           (consulta) => consulta.id === i
         );
@@ -178,13 +119,7 @@ const [tituloPlan, setTituloPlan] = useState("");
     });
   };
 
-
-  // =====================================================
-  // DISTRIBUIR COSTO TOTAL
-  // =====================================================
-
   const distribuirCosto = (total: number) => {
-
     if (total < 0) {
       total = 0;
     }
@@ -206,10 +141,8 @@ const [tituloPlan, setTituloPlan] = useState("");
 
     const nuevasConsultas = consultas.map(
       (consulta, index) => {
-
         let costo = cantidadBase;
 
-        // La diferencia queda en la última consulta
         if (index === cantidadConsultas - 1) {
           costo =
             Math.round(
@@ -227,36 +160,22 @@ const [tituloPlan, setTituloPlan] = useState("");
     setConsultas(nuevasConsultas);
   };
 
-
-  // =====================================================
-  // ACTUALIZAR CONSULTA
-  // =====================================================
-
   const actualizarConsulta = (
     id: number,
     campo: keyof Consulta,
     valor: string | number
   ) => {
-
     setConsultas((anteriores) =>
-
       anteriores.map((consulta) =>
-
         consulta.id === id
           ? {
               ...consulta,
               [campo]: valor,
             }
           : consulta
-
       )
     );
   };
-
-
-  // =====================================================
-  // TOTAL REAL DE CONSULTAS
-  // =====================================================
 
   const totalConsultas = consultas.reduce(
     (total, consulta) =>
@@ -264,232 +183,217 @@ const [tituloPlan, setTituloPlan] = useState("");
     0
   );
 
-
-  // =====================================================
-  // GUARDAR PLAN
-  // =====================================================
-
   const guardarPlan = async () => {
-
-  // ==========================================
-  // VALIDACIONES
-  // ==========================================
-
-  if (!pacienteSeleccionado) {
-    setMensaje("Primero debes seleccionar un paciente.");
-    return;
-  }
-
-  if (!tituloPlan.trim()) {
-    setMensaje("Ingresa un título para el plan de tratamiento.");
-    return;
-  }
-
-  if (
-    consultas.some(
-      (consulta) =>
-        !consulta.procedimiento.trim()
-    )
-  ) {
-    setMensaje(
-      "Completa el procedimiento de todas las consultas."
-    );
-    return;
-  }
-
-
-  setGuardando(true);
-  setMensaje("");
-
-
-  try {
-
-    // ==========================================
-    // 1. OBTENER USUARIO AUTENTICADO
-    // ==========================================
-
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-
-    if (userError || !user) {
-      throw new Error(
-        "No se pudo obtener el usuario autenticado."
-      );
+    if (!pacienteSeleccionado) {
+      setMensaje("Primero debes seleccionar un paciente.");
+      return;
     }
 
-console.log("USUARIO AUTENTICADO:", user);
-console.log("USER ID:", user.id);
-console.log("USER EMAIL:", user.email);
-    // ==========================================
-    // 2. BUSCAR EL MÉDICO VINCULADO
-    // ==========================================
-
-    const {
-      data: medico,
-      error: medicoError,
-    } = await supabase
-      .from("medicos")
-      .select("id")
-      .eq("auth_user_id", user.id)
-      .single();
-
-
-    if (medicoError || !medico) {
-      console.error("Error médico:", medicoError);
-
-      throw new Error(
-        "No se encontró un médico vinculado a este usuario."
-      );
+    if (!tituloPlan.trim()) {
+      setMensaje("Ingresa un título para el plan de tratamiento.");
+      return;
     }
 
+    if (
+      consultas.some(
+        (consulta) =>
+          !consulta.procedimiento.trim()
+      )
+    ) {
+      setMensaje(
+        "Completa el procedimiento de todas las consultas."
+      );
+      return;
+    }
 
-    // ==========================================
-    // 3. CREAR PLAN DE TRATAMIENTO
-    // ==========================================
+    setGuardando(true);
+    setMensaje("");
 
-    const {
-      data: plan,
-      error: planError,
-    } = await supabase
-      .from("planes_tratamiento")
-      .insert({
-        paciente_id: pacienteSeleccionado.id,
-        medico_id: medico.id,
-        titulo: tituloPlan.trim(),
-        cantidad_consultas: consultas.length,
-        costo_total: totalConsultas,
-        estado: "pendiente",
-      })
-      .select()
-      .single();
+    try {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
 
+      if (userError || !user) {
+        throw new Error(
+          "No se pudo obtener el usuario autenticado."
+        );
+      }
 
-    if (planError || !plan) {
+      console.log("USUARIO AUTENTICADO:", user);
+      console.log("USER ID:", user.id);
+      console.log("USER EMAIL:", user.email);
+
+      const {
+        data: medico,
+        error: medicoError,
+      } = await supabase
+        .from("medicos")
+        .select("id")
+        .eq("auth_user_id", user.id)
+        .single();
+
+      if (medicoError || !medico) {
+        console.error("Error médico:", medicoError);
+        throw new Error(
+          "No se encontró un médico vinculado a este usuario."
+        );
+      }
+
+      const {
+        data: plan,
+        error: planError,
+      } = await supabase
+        .from("planes_tratamiento")
+        .insert({
+          paciente_id: pacienteSeleccionado.id,
+          medico_id: medico.id,
+          titulo: tituloPlan.trim(),
+          cantidad_consultas: consultas.length,
+          costo_total: totalConsultas,
+          estado: "pendiente",
+        })
+        .select()
+        .single();
+
+      if (planError || !plan) {
+        console.error(
+          "Error guardando plan:",
+          planError
+        );
+
+        throw new Error(
+          planError?.message ||
+          "No se pudo guardar el plan."
+        );
+      }
+
+      const consultasParaGuardar = consultas.map(
+        (consulta) => ({
+          plan_id: plan.id,
+          numero_consulta: consulta.id,
+          descripcion: consulta.procedimiento.trim(),
+          costo: Number(consulta.costo),
+          estado: "pendiente",
+          observaciones:
+            consulta.observaciones.trim() || null,
+        })
+      );
+
+      const {
+        error: consultasError,
+      } = await supabase
+        .from("plan_consultas")
+        .insert(consultasParaGuardar);
+
+      if (consultasError) {
+        console.error(
+          "Error guardando consultas:",
+          consultasError
+        );
+
+        throw new Error(
+          consultasError.message ||
+          "No se pudieron guardar las consultas."
+        );
+      }
+
+      setMensaje(
+        "Plan de tratamiento guardado correctamente."
+      );
+    } catch (error) {
       console.error(
-        "Error guardando plan:",
-        planError
+        "Error al guardar plan:",
+        error
       );
 
-      throw new Error(
-        planError?.message ||
-        "No se pudo guardar el plan."
+      setMensaje(
+        error instanceof Error
+          ? error.message
+          : "Ocurrió un error al guardar el plan."
       );
+    } finally {
+      setGuardando(false);
     }
-
-
-    // ==========================================
-    // 4. PREPARAR CONSULTAS
-    // ==========================================
-
-    const consultasParaGuardar = consultas.map(
-      (consulta) => ({
-        plan_id: plan.id,
-        numero_consulta: consulta.id,
-        descripcion: consulta.procedimiento.trim(),
-        costo: Number(consulta.costo),
-        estado: "pendiente",
-        observaciones:
-          consulta.observaciones.trim() || null,
-      })
-    );
-
-
-    // ==========================================
-    // 5. GUARDAR CONSULTAS
-    // ==========================================
-
-    const {
-      error: consultasError,
-    } = await supabase
-      .from("plan_consultas")
-      .insert(consultasParaGuardar);
-
-
-    if (consultasError) {
-
-      console.error(
-        "Error guardando consultas:",
-        consultasError
-      );
-
-      throw new Error(
-        consultasError.message ||
-        "No se pudieron guardar las consultas."
-      );
-    }
-
-
-    // ==========================================
-    // 6. ÉXITO
-    // ==========================================
-
-    setMensaje(
-      "Plan de tratamiento guardado correctamente."
-    );
-
-
-  } catch (error) {
-
-    console.error(
-      "Error al guardar plan:",
-      error
-    );
-
-    setMensaje(
-      error instanceof Error
-        ? error.message
-        : "Ocurrió un error al guardar el plan."
-    );
-
-
-  } finally {
-
-    setGuardando(false);
-
-  }
-
-};
-
-  // =====================================================
-  // INTERFAZ
-  // =====================================================
+  };
 
   return (
-
     <div className="space-y-6">
 
-
-      {/* =================================================
-          ENCABEZADO
-      ================================================= */}
+      {/* ENCABEZADO */}
 
       <div>
-
-        <h1 className="text-3xl font-extrabold text-white">
+        <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white">
           Plan de Tratamiento
         </h1>
 
-        <p className="text-slate-400 mt-2">
+        <p className="text-slate-500 dark:text-slate-400 mt-2">
           Planificación clínica y seguimiento del tratamiento odontológico.
         </p>
-
       </div>
 
 
-      {/* =================================================
-          PACIENTE
-      ================================================= */}
+      {/* PACIENTE */}
 
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+      <div className="
+        bg-white
+        dark:bg-slate-900
+        border
+        border-slate-200
+        dark:border-slate-800
+        rounded-2xl
+        overflow-hidden
+        shadow-sm
+        dark:shadow-xl
+      ">
 
-        <div className="flex items-center justify-between mb-5">
+        {/* CABECERA */}
 
-          <h2 className="text-xl font-bold text-white">
-            Paciente
-          </h2>
+        <div className="
+          px-6
+          py-5
+          border-b
+          border-slate-200
+          dark:border-slate-800
+          flex
+          flex-col
+          sm:flex-row
+          sm:items-center
+          sm:justify-between
+          gap-4
+        ">
+
+          <div className="flex items-center gap-3">
+
+            <div className="
+              w-11
+              h-11
+              rounded-xl
+              bg-cyan-500/10
+              border
+              border-cyan-500/20
+              flex
+              items-center
+              justify-center
+              text-cyan-500
+              dark:text-cyan-400
+              text-xl
+            ">
+              👤
+            </div>
+
+            <div>
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+                Paciente
+              </h2>
+
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+                Selecciona al paciente para iniciar su plan de tratamiento.
+              </p>
+            </div>
+
+          </div>
 
           <button
             onClick={limpiarPlan}
@@ -497,9 +401,17 @@ console.log("USER EMAIL:", user.email);
               px-4
               py-2
               rounded-xl
-              bg-slate-700
-              hover:bg-slate-600
-              text-white
+              bg-slate-100
+              hover:bg-slate-200
+              dark:bg-slate-800
+              dark:hover:bg-slate-700
+              border
+              border-slate-200
+              dark:border-slate-700
+              text-slate-600
+              dark:text-slate-300
+              hover:text-slate-900
+              dark:hover:text-white
               text-sm
               font-semibold
               transition
@@ -511,147 +423,454 @@ console.log("USER EMAIL:", user.email);
         </div>
 
 
-        {/* BUSCADOR */}
+        {/* CONTENIDO */}
 
-        <label className="text-slate-400 text-sm">
-          Buscar paciente por DNI o nombre
-        </label>
+        <div className="p-6">
 
-        <input
-          value={buscarPaciente}
-          onChange={(e) =>
-            setBuscarPaciente(e.target.value)
-          }
-          placeholder="Escriba DNI o nombre..."
-          className="
-            mt-2
-            w-full
-            bg-slate-950
-            border
-            border-slate-800
-            rounded-xl
-            px-4
-            py-3
-            text-white
-            outline-none
-            focus:border-cyan-500
-          "
-        />
+          {/* BUSCADOR */}
 
+          <div className="max-w-2xl">
 
-        {/* RESULTADOS */}
+            <label className="
+              block
+              text-sm
+              font-semibold
+              text-slate-700
+              dark:text-slate-300
+              mb-2
+            ">
+              Buscar paciente
+            </label>
 
-        {pacientes.length > 0 && (
-
-          <div className="mt-3 rounded-xl border border-slate-800 overflow-hidden">
-
-            {pacientes.map((p) => (
-
-              <button
-                key={p.id}
-                type="button"
-                onClick={() =>
-                  seleccionarPaciente(p)
-                }
-                className="
-                  w-full
-                  text-left
-                  p-4
-                  hover:bg-slate-800
-                  border-b
-                  border-slate-800
-                  last:border-b-0
-                  transition
-                "
-              >
-
-                <div className="font-bold text-white">
-                  {p.nombres} {p.apellidos}
-                </div>
-
-                <div className="text-sm text-slate-400">
-                  DNI: {p.dni}
-                </div>
-
-              </button>
-
-            ))}
-
-          </div>
-
-        )}
-
-
-        {/* PACIENTE SELECCIONADO */}
-
-        {pacienteSeleccionado && (
-
-          <div
-            className="
-              mt-5
-              bg-slate-950
-              border
-              border-cyan-500/50
-              rounded-xl
-              p-5
-            "
-          >
-
-            <div className="flex items-center justify-between">
-
-              <h2 className="text-cyan-400 font-bold text-lg">
-                Paciente seleccionado
-              </h2>
+            <div className="relative">
 
               <span className="
-                text-xs
-                px-3
-                py-1
-                rounded-full
-                bg-cyan-500/10
-                text-cyan-400
+                absolute
+                left-4
+                top-1/2
+                -translate-y-1/2
+                text-slate-400
+                dark:text-slate-500
+                text-lg
               ">
-                Paciente activo
+                🔎
               </span>
 
+              <input
+                value={buscarPaciente}
+                onChange={(e) =>
+                  setBuscarPaciente(e.target.value)
+                }
+                placeholder="Buscar por DNI, nombres o apellidos..."
+                className="
+                  w-full
+                  bg-white
+                  dark:bg-slate-950
+                  border
+                  border-slate-300
+                  dark:border-slate-700
+                  rounded-xl
+                  pl-11
+                  pr-4
+                  py-3.5
+                  text-slate-900
+                  dark:text-white
+                  placeholder:text-slate-400
+                  dark:placeholder:text-slate-600
+                  outline-none
+                  transition
+                  focus:border-cyan-500
+                  focus:ring-2
+                  focus:ring-cyan-500/10
+                "
+              />
+
             </div>
 
-
-            <div className="
-              grid
-              grid-cols-1
-              md:grid-cols-2
-              gap-3
-              mt-4
-              text-sm
+            <p className="
+              text-xs
+              text-slate-500
+              mt-2
             ">
-
-              <p className="text-white">
-                <b>Nombre:</b>{" "}
-                {pacienteSeleccionado.nombres}{" "}
-                {pacienteSeleccionado.apellidos}
-              </p>
-
-              <p className="text-white">
-                <b>DNI:</b>{" "}
-                {pacienteSeleccionado.dni}
-              </p>
-
-              <p className="text-white">
-                <b>Teléfono:</b>{" "}
-                {pacienteSeleccionado.telefono || "No registrado"}
-              </p>
-
-              <p className="text-white">
-                <b>Sexo:</b>{" "}
-                {pacienteSeleccionado.sexo || "No registrado"}
-              </p>
-
-            </div>
+              Escribe al menos parte del DNI o nombre del paciente.
+            </p>
 
           </div>
 
-        )}
+
+          {/* RESULTADOS DE BÚSQUEDA */}
+
+          {pacientes.length > 0 && (
+
+            <div className="
+              mt-4
+              max-w-2xl
+              bg-white
+              dark:bg-slate-950
+              border
+              border-slate-200
+              dark:border-slate-800
+              rounded-xl
+              overflow-hidden
+              shadow-lg
+            ">
+
+              <div className="
+                px-4
+                py-3
+                border-b
+                border-slate-200
+                dark:border-slate-800
+                bg-slate-50
+                dark:bg-slate-900/60
+              ">
+
+                <p className="
+                  text-xs
+                  uppercase
+                  tracking-wider
+                  font-bold
+                  text-slate-500
+                ">
+                  Pacientes encontrados
+                </p>
+
+              </div>
+
+              {pacientes.map((p) => (
+
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() =>
+                    seleccionarPaciente(p)
+                  }
+                  className="
+                    w-full
+                    text-left
+                    px-4
+                    py-4
+                    flex
+                    items-center
+                    gap-4
+                    border-b
+                    border-slate-200
+                    dark:border-slate-800
+                    last:border-b-0
+                    hover:bg-slate-50
+                    dark:hover:bg-slate-800/70
+                    transition
+                  "
+                >
+
+                  <div className="
+                    w-10
+                    h-10
+                    shrink-0
+                    rounded-full
+                    bg-cyan-500/10
+                    border
+                    border-cyan-500/20
+                    flex
+                    items-center
+                    justify-center
+                    text-cyan-600
+                    dark:text-cyan-400
+                    font-bold
+                  ">
+                    {p.nombres?.charAt(0)}
+                  </div>
+
+                  <div className="min-w-0">
+
+                    <p className="
+                      text-slate-900
+                      dark:text-white
+                      font-semibold
+                      truncate
+                    ">
+                      {p.nombres} {p.apellidos}
+                    </p>
+
+                    <p className="
+                      text-sm
+                      text-slate-500
+                      dark:text-slate-500
+                      mt-0.5
+                    ">
+                      DNI: {p.dni}
+                    </p>
+
+                  </div>
+
+                  <span className="
+                    ml-auto
+                    text-slate-400
+                    dark:text-slate-600
+                    text-lg
+                  ">
+                    →
+                  </span>
+
+                </button>
+
+              ))}
+
+            </div>
+
+          )}
+
+
+          {/* PACIENTE SELECCIONADO */}
+
+          {pacienteSeleccionado && (
+
+            <div className="
+              mt-6
+              rounded-2xl
+              border
+              border-cyan-200
+              dark:border-cyan-500/20
+              bg-gradient-to-br
+              from-cyan-50
+              via-white
+              to-slate-50
+              dark:from-cyan-500/5
+              dark:via-slate-950
+              dark:to-slate-950
+              overflow-hidden
+            ">
+
+              {/* IDENTIFICACIÓN */}
+
+              <div className="
+                px-5
+                py-4
+                border-b
+                border-cyan-100
+                dark:border-cyan-500/10
+                flex
+                flex-col
+                sm:flex-row
+                sm:items-center
+                sm:justify-between
+                gap-4
+              ">
+
+                <div className="flex items-center gap-4">
+
+                  <div className="
+                    w-14
+                    h-14
+                    rounded-2xl
+                    bg-cyan-500/10
+                    border
+                    border-cyan-500/20
+                    flex
+                    items-center
+                    justify-center
+                    text-cyan-600
+                    dark:text-cyan-400
+                    text-xl
+                    font-bold
+                  ">
+                    {pacienteSeleccionado.nombres?.charAt(0)}
+                  </div>
+
+                  <div>
+
+                    <p className="
+                      text-xs
+                      uppercase
+                      tracking-wider
+                      text-cyan-600
+                      dark:text-cyan-400
+                      font-bold
+                    ">
+                      Paciente seleccionado
+                    </p>
+
+                    <h3 className="
+                      text-xl
+                      font-bold
+                      text-slate-900
+                      dark:text-white
+                      mt-1
+                    ">
+                      {pacienteSeleccionado.nombres}{" "}
+                      {pacienteSeleccionado.apellidos}
+                    </h3>
+
+                  </div>
+
+                </div>
+
+                <span className="
+                  inline-flex
+                  items-center
+                  gap-2
+                  w-fit
+                  px-3
+                  py-1.5
+                  rounded-full
+                  bg-emerald-50
+                  dark:bg-emerald-500/10
+                  border
+                  border-emerald-200
+                  dark:border-emerald-500/20
+                  text-emerald-700
+                  dark:text-emerald-400
+                  text-xs
+                  font-bold
+                ">
+
+                  <span className="
+                    w-1.5
+                    h-1.5
+                    rounded-full
+                    bg-emerald-500
+                    dark:bg-emerald-400
+                  " />
+
+                  Paciente activo
+
+                </span>
+
+              </div>
+
+
+              {/* DATOS CLÍNICOS */}
+
+              <div className="
+                grid
+                grid-cols-1
+                sm:grid-cols-2
+                lg:grid-cols-4
+                gap-px
+                bg-slate-200
+                dark:bg-slate-800/50
+              ">
+
+                <div className="
+                  bg-white
+                  dark:bg-slate-950/80
+                  p-4
+                ">
+
+                  <p className="
+                    text-xs
+                    text-slate-500
+                    uppercase
+                    tracking-wide
+                    font-semibold
+                  ">
+                    DNI
+                  </p>
+
+                  <p className="
+                    text-slate-900
+                    dark:text-white
+                    font-semibold
+                    mt-1
+                  ">
+                    {pacienteSeleccionado.dni}
+                  </p>
+
+                </div>
+
+
+                <div className="
+                  bg-white
+                  dark:bg-slate-950/80
+                  p-4
+                ">
+
+                  <p className="
+                    text-xs
+                    text-slate-500
+                    uppercase
+                    tracking-wide
+                    font-semibold
+                  ">
+                    Teléfono
+                  </p>
+
+                  <p className="
+                    text-slate-900
+                    dark:text-white
+                    font-semibold
+                    mt-1
+                  ">
+                    {pacienteSeleccionado.telefono ||
+                      "No registrado"}
+                  </p>
+
+                </div>
+
+
+                <div className="
+                  bg-white
+                  dark:bg-slate-950/80
+                  p-4
+                ">
+
+                  <p className="
+                    text-xs
+                    text-slate-500
+                    uppercase
+                    tracking-wide
+                    font-semibold
+                  ">
+                    Sexo
+                  </p>
+
+                  <p className="
+                    text-slate-900
+                    dark:text-white
+                    font-semibold
+                    mt-1
+                  ">
+                    {pacienteSeleccionado.sexo ||
+                      "No registrado"}
+                  </p>
+
+                </div>
+
+
+                <div className="
+                  bg-white
+                  dark:bg-slate-950/80
+                  p-4
+                ">
+
+                  <p className="
+                    text-xs
+                    text-slate-500
+                    uppercase
+                    tracking-wide
+                    font-semibold
+                  ">
+                    Estado
+                  </p>
+
+                  <p className="
+                    text-emerald-600
+                    dark:text-emerald-400
+                    font-semibold
+                    mt-1
+                  ">
+                    Listo para tratamiento
+                  </p>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          )}
+
+        </div>
 
       </div>
 
@@ -663,11 +882,15 @@ console.log("USER EMAIL:", user.email);
       {pacienteSeleccionado && (
 
         <div className="
-          bg-slate-900
+          bg-white
+          dark:bg-slate-900
           border
-          border-slate-800
+          border-slate-200
+          dark:border-slate-800
           rounded-2xl
           p-6
+          shadow-sm
+          dark:shadow-none
         ">
 
           <div className="
@@ -681,40 +904,68 @@ console.log("USER EMAIL:", user.email);
 
             <div>
 
-              <h2 className="text-xl font-bold text-white">
+              <h2 className="
+                text-xl
+                font-bold
+                text-slate-900
+                dark:text-white
+              ">
                 Configuración del tratamiento
               </h2>
 
-              <p className="text-sm text-slate-400 mt-1">
+              <p className="
+                text-sm
+                text-slate-500
+                dark:text-slate-400
+                mt-1
+              ">
                 Define la cantidad de consultas y distribuye el costo total.
               </p>
 
             </div>
-            <div className="mt-5">
-  <label className="text-sm text-slate-400">
-    Título del plan de tratamiento
-  </label>
 
-  <input
-    type="text"
-    value={tituloPlan}
-    onChange={(e) => setTituloPlan(e.target.value)}
-    placeholder="Ej. Tratamiento integral odontológico"
-    className="
-      mt-2
-      w-full
-      bg-slate-950
-      border
-      border-slate-700
-      rounded-xl
-      px-4
-      py-3
-      text-white
-      outline-none
-      focus:border-cyan-500
-    "
-  />
-</div>
+
+            <div className="mt-5 lg:mt-0 w-full lg:max-w-md">
+
+              <label className="
+                text-sm
+                text-slate-600
+                dark:text-slate-400
+              ">
+                Título del plan de tratamiento
+              </label>
+
+              <input
+                type="text"
+                value={tituloPlan}
+                onChange={(e) =>
+                  setTituloPlan(e.target.value)
+                }
+                placeholder="Ej. Tratamiento integral odontológico"
+                className="
+                  mt-2
+                  w-full
+                  bg-white
+                  dark:bg-slate-950
+                  border
+                  border-slate-300
+                  dark:border-slate-700
+                  rounded-xl
+                  px-4
+                  py-3
+                  text-slate-900
+                  dark:text-white
+                  placeholder:text-slate-400
+                  dark:placeholder:text-slate-600
+                  outline-none
+                  transition
+                  focus:border-cyan-500
+                  focus:ring-2
+                  focus:ring-cyan-500/10
+                "
+              />
+
+            </div>
 
 
             <div className="
@@ -726,41 +977,59 @@ console.log("USER EMAIL:", user.email);
               lg:w-auto
             ">
 
-
               {/* CANTIDAD */}
 
-             <div className="flex flex-col gap-2">
-  <label className="text-sm text-slate-400">
-    Cantidad de consultas
-  </label>
+              <div className="flex flex-col gap-2">
 
-  <input
-    type="number"
-    min={1}
-    value={cantidadConsultas}
-    onChange={(e) =>
-      cambiarCantidadConsultas(Number(e.target.value))
-    }
-    className="
-      w-full
-      bg-slate-950
-      border
-      border-slate-700
-      rounded-lg
-      px-3
-      py-2
-      text-white
-      outline-none
-      focus:border-cyan-500
-    "
-  />
-</div>
+                <label className="
+                  text-sm
+                  text-slate-600
+                  dark:text-slate-400
+                ">
+                  Cantidad de consultas
+                </label>
+
+                <input
+                  type="number"
+                  min={1}
+                  value={cantidadConsultas}
+                  onChange={(e) =>
+                    cambiarCantidadConsultas(
+                      Number(e.target.value)
+                    )
+                  }
+                  className="
+                    w-full
+                    bg-white
+                    dark:bg-slate-950
+                    border
+                    border-slate-300
+                    dark:border-slate-700
+                    rounded-lg
+                    px-3
+                    py-2
+                    text-slate-900
+                    dark:text-white
+                    outline-none
+                    transition
+                    focus:border-cyan-500
+                    focus:ring-2
+                    focus:ring-cyan-500/10
+                  "
+                />
+
+              </div>
+
 
               {/* COSTO TOTAL */}
 
               <div>
 
-                <label className="text-sm text-slate-400">
+                <label className="
+                  text-sm
+                  text-slate-600
+                  dark:text-slate-400
+                ">
                   Costo total del tratamiento
                 </label>
 
@@ -770,39 +1039,49 @@ console.log("USER EMAIL:", user.email);
                     flex
                     items-center
                     px-3
-                    bg-slate-800
+                    bg-slate-100
+                    dark:bg-slate-800
                     border
-                    border-slate-700
+                    border-slate-300
+                    dark:border-slate-700
                     border-r-0
                     rounded-l-xl
-                    text-slate-300
+                    text-slate-600
+                    dark:text-slate-300
                   ">
                     S/.
                   </span>
 
                   <input
-  type="number"
-  min={0}
-  step="0.01"
-  value={costoTotal}
-  onFocus={(e) => e.currentTarget.select()}
-  onChange={(e) =>
-    setCostoTotal(
-      Number(e.target.value)
-    )
-  }
-  className="
-    w-full
-    sm:w-40
-    bg-slate-950
-    border
-    border-slate-700
-    rounded-r-xl
-    px-4
-    py-3
-    text-white
-  "
-/>
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    value={costoTotal}
+                    onFocus={(e) =>
+                      e.currentTarget.select()
+                    }
+                    onChange={(e) =>
+                      setCostoTotal(
+                        Number(e.target.value)
+                      )
+                    }
+                    className="
+                      w-full
+                      sm:w-40
+                      bg-white
+                      dark:bg-slate-950
+                      border
+                      border-slate-300
+                      dark:border-slate-700
+                      rounded-r-xl
+                      px-4
+                      py-3
+                      text-slate-900
+                      dark:text-white
+                      outline-none
+                      focus:border-cyan-500
+                    "
+                  />
 
                 </div>
 
@@ -825,18 +1104,28 @@ console.log("USER EMAIL:", user.email);
             gap-4
             p-4
             rounded-xl
-            bg-cyan-500/5
+            bg-cyan-50
+            dark:bg-cyan-500/5
             border
-            border-cyan-500/20
+            border-cyan-200
+            dark:border-cyan-500/20
           ">
 
             <div>
 
-              <p className="text-white font-semibold">
+              <p className="
+                text-slate-900
+                dark:text-white
+                font-semibold
+              ">
                 Distribución del tratamiento
               </p>
 
-              <p className="text-sm text-slate-400">
+              <p className="
+                text-sm
+                text-slate-500
+                dark:text-slate-400
+              ">
                 El costo total se repartirá entre las consultas.
               </p>
 
@@ -855,6 +1144,7 @@ console.log("USER EMAIL:", user.email);
                 text-white
                 font-semibold
                 transition
+                shadow-sm
               "
             >
               Distribuir costo
@@ -874,11 +1164,15 @@ console.log("USER EMAIL:", user.email);
       {pacienteSeleccionado && (
 
         <div className="
-          bg-slate-900
+          bg-white
+          dark:bg-slate-900
           border
-          border-slate-800
+          border-slate-200
+          dark:border-slate-800
           rounded-2xl
           p-6
+          shadow-sm
+          dark:shadow-none
         ">
 
           <div className="
@@ -893,21 +1187,39 @@ console.log("USER EMAIL:", user.email);
 
             <div>
 
-              <h2 className="text-xl font-bold text-white">
+              <h2 className="
+                text-xl
+                font-bold
+                text-slate-900
+                dark:text-white
+              ">
                 Planificación de Consultas
               </h2>
 
-              <p className="text-sm text-slate-400 mt-1">
+              <p className="
+                text-sm
+                text-slate-500
+                dark:text-slate-400
+                mt-1
+              ">
                 Organiza paso a paso el tratamiento del paciente.
               </p>
 
             </div>
 
-            <div className="text-sm text-slate-400">
+            <div className="
+              text-sm
+              text-slate-500
+              dark:text-slate-400
+            ">
 
               Total distribuido:{" "}
 
-              <span className="text-cyan-400 font-bold">
+              <span className="
+                text-cyan-600
+                dark:text-cyan-400
+                font-bold
+              ">
                 S/. {totalConsultas.toFixed(2)}
               </span>
 
@@ -921,9 +1233,8 @@ console.log("USER EMAIL:", user.email);
           <div className="
             grid
             grid-cols-1
-            md:grid-cols-2
-            xl:grid-cols-3
-            2xl:grid-cols-4
+            sm:grid-cols-2
+            lg:grid-cols-4
             gap-5
           ">
 
@@ -932,12 +1243,15 @@ console.log("USER EMAIL:", user.email);
               <div
                 key={consulta.id}
                 className="
-                  bg-slate-950
+                  bg-slate-50
+                  dark:bg-slate-950
                   border
-                  border-slate-800
+                  border-slate-200
+                  dark:border-slate-800
                   rounded-xl
                   p-5
-                  hover:border-slate-700
+                  hover:border-cyan-300
+                  dark:hover:border-slate-700
                   transition
                 "
               >
@@ -954,7 +1268,8 @@ console.log("USER EMAIL:", user.email);
                   <h3 className="
                     text-lg
                     font-bold
-                    text-cyan-400
+                    text-cyan-600
+                    dark:text-cyan-400
                   ">
                     Consulta {consulta.id}
                   </h3>
@@ -964,8 +1279,10 @@ console.log("USER EMAIL:", user.email);
                     px-2.5
                     py-1
                     rounded-full
-                    bg-slate-800
-                    text-slate-400
+                    bg-slate-200
+                    dark:bg-slate-800
+                    text-slate-600
+                    dark:text-slate-400
                   ">
                     Sesión {consulta.id}
                   </span>
@@ -975,7 +1292,11 @@ console.log("USER EMAIL:", user.email);
 
                 {/* PROCEDIMIENTO */}
 
-                <label className="text-sm text-slate-400">
+                <label className="
+                  text-sm
+                  text-slate-600
+                  dark:text-slate-400
+                ">
                   Procedimiento
                 </label>
 
@@ -993,14 +1314,21 @@ console.log("USER EMAIL:", user.email);
                   className="
                     mt-2
                     w-full
-                    bg-slate-900
+                    bg-white
+                    dark:bg-slate-900
                     border
-                    border-slate-700
+                    border-slate-300
+                    dark:border-slate-700
                     rounded-xl
                     p-3
-                    text-white
+                    text-slate-900
+                    dark:text-white
+                    placeholder:text-slate-400
+                    dark:placeholder:text-slate-600
                     outline-none
                     focus:border-cyan-500
+                    focus:ring-2
+                    focus:ring-cyan-500/10
                     resize-none
                   "
                 />
@@ -1010,7 +1338,8 @@ console.log("USER EMAIL:", user.email);
 
                 <label className="
                   text-sm
-                  text-slate-400
+                  text-slate-600
+                  dark:text-slate-400
                   mt-5
                   block
                 ">
@@ -1023,12 +1352,15 @@ console.log("USER EMAIL:", user.email);
                     flex
                     items-center
                     px-3
-                    bg-slate-800
+                    bg-slate-100
+                    dark:bg-slate-800
                     border
-                    border-slate-700
+                    border-slate-300
+                    dark:border-slate-700
                     border-r-0
                     rounded-l-xl
-                    text-slate-300
+                    text-slate-600
+                    dark:text-slate-300
                   ">
                     S/.
                   </span>
@@ -1047,12 +1379,17 @@ console.log("USER EMAIL:", user.email);
                     }
                     className="
                       w-full
-                      bg-slate-900
+                      bg-white
+                      dark:bg-slate-900
                       border
-                      border-slate-700
+                      border-slate-300
+                      dark:border-slate-700
                       rounded-r-xl
                       p-3
-                      text-white
+                      text-slate-900
+                      dark:text-white
+                      outline-none
+                      focus:border-cyan-500
                     "
                   />
 
@@ -1063,7 +1400,8 @@ console.log("USER EMAIL:", user.email);
 
                 <label className="
                   text-sm
-                  text-slate-400
+                  text-slate-600
+                  dark:text-slate-400
                   mt-5
                   block
                 ">
@@ -1084,14 +1422,21 @@ console.log("USER EMAIL:", user.email);
                   className="
                     mt-2
                     w-full
-                    bg-slate-900
+                    bg-white
+                    dark:bg-slate-900
                     border
-                    border-slate-700
+                    border-slate-300
+                    dark:border-slate-700
                     rounded-xl
                     p-3
-                    text-white
+                    text-slate-900
+                    dark:text-white
+                    placeholder:text-slate-400
+                    dark:placeholder:text-slate-600
                     outline-none
                     focus:border-cyan-500
+                    focus:ring-2
+                    focus:ring-cyan-500/10
                     resize-none
                   "
                 />
@@ -1115,18 +1460,30 @@ console.log("USER EMAIL:", user.email);
             gap-3
             p-5
             rounded-xl
-            bg-slate-950
+            bg-slate-50
+            dark:bg-slate-950
             border
-            border-slate-800
+            border-slate-200
+            dark:border-slate-800
           ">
 
             <div>
 
-              <p className="text-slate-400 text-sm">
+              <p className="
+                text-slate-500
+                dark:text-slate-400
+                text-sm
+              ">
                 Costo total del plan
               </p>
 
-              <p className="text-white text-2xl font-bold mt-1">
+              <p className="
+                text-slate-900
+                dark:text-white
+                text-2xl
+                font-bold
+                mt-1
+              ">
                 S/. {totalConsultas.toFixed(2)}
               </p>
 
@@ -1134,11 +1491,20 @@ console.log("USER EMAIL:", user.email);
 
             <div className="text-right">
 
-              <p className="text-slate-400 text-sm">
+              <p className="
+                text-slate-500
+                dark:text-slate-400
+                text-sm
+              ">
                 Consultas programadas
               </p>
 
-              <p className="text-cyan-400 text-xl font-bold">
+              <p className="
+                text-cyan-600
+                dark:text-cyan-400
+                text-xl
+                font-bold
+              ">
                 {consultas.length}
               </p>
 
@@ -1155,10 +1521,13 @@ console.log("USER EMAIL:", user.email);
               mt-5
               p-4
               rounded-xl
-              bg-slate-950
+              bg-cyan-50
+              dark:bg-cyan-500/5
               border
-              border-cyan-500/30
-              text-cyan-300
+              border-cyan-200
+              dark:border-cyan-500/30
+              text-cyan-700
+              dark:text-cyan-300
             ">
               {mensaje}
             </div>

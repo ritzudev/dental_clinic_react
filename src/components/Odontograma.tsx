@@ -337,7 +337,6 @@ const exportarPDF = () => {
   // =====================================================
 
   
-
   // ------------------------------------
 // OBTENER COLOR DEL ESTADO
 // ------------------------------------
@@ -421,12 +420,7 @@ const dibujarCara = (
 // ------------------------------------
 // DIBUJAR UN DIENTE
 // ------------------------------------
-// --------------------------------
-// DIBUJAR UN DIENTE
-// --------------------------------
-// --------------------------------
-// DIBUJAR UN DIENTE
-// --------------------------------
+
 
 const dibujarDiente = (
   numero: number,
@@ -836,7 +830,7 @@ Object.values(datos).forEach((caras) => {
 });
 
   return (
-    <div className="p-6">
+    <div className="min-h-full w-full bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 p-4 md:p-6">
 
 
 
@@ -893,97 +887,194 @@ Object.values(datos).forEach((caras) => {
   </div>
 )}
 
-      <h2 className="text-2xl font-extrabold mb-6 text-slate-800 dark:text-white">
-  Odontograma Dental
-</h2>
-{/* INFORMACIÓN DEL PACIENTE */}
+      
+<div className="mb-6">
+  <div className="flex items-center gap-3">
+    <div className="w-10 h-10 rounded-xl bg-cyan-50 dark:bg-cyan-500/10 border border-cyan-200 dark:border-cyan-500/20 flex items-center justify-center">
+      <span className="text-lg">🦷</span>
+    </div>
+
+    <div>
+      <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white">
+        Odontograma Dental
+      </h2>
+
+      <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+        Registro y seguimiento del estado dental del paciente
+      </p>
+    </div>
+  </div>
+</div>
+
+
+
+
 {/* INFORMACIÓN DEL PACIENTE + HISTORIAL */}
+<div className="bg-white dark:bg-slate-900 rounded-[24px] border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden mb-6">
 
-<div className="bg-white dark:bg-slate-900 rounded-2xl shadow border border-slate-200 dark:border-slate-700 p-6 mb-6">
-
-  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+  <div className="grid grid-cols-1 xl:grid-cols-[1fr_1.15fr]">
 
     {/* INFORMACIÓN DEL PACIENTE */}
-    <div>
+    <div className="p-6 md:p-7 border-b xl:border-b-0 xl:border-r border-slate-200 dark:border-slate-800">
 
-      <h3 className="text-lg font-bold mb-5">
-        Información del Paciente
-      </h3>
+    <div className="flex items-center gap-4 mb-6">
 
-      <div>
+  <div className="w-14 h-14 rounded-2xl bg-cyan-50 dark:bg-cyan-500/10 border border-cyan-200 dark:border-cyan-500/20 flex items-center justify-center shrink-0 shadow-sm">
+    <span className="text-lg font-extrabold text-cyan-700 dark:text-cyan-300">
+      {paciente.nombres?.charAt(0)}
+      {paciente.apellidos?.charAt(0)}
+    </span>
+  </div>
 
-        <p>
-          <strong>Paciente:</strong>{" "}
-          {paciente.nombres} {paciente.apellidos}
-        </p>
+  <div className="min-w-0">
+    <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-cyan-600 dark:text-cyan-400 mb-1">
+      Paciente
+    </p>
 
-        <p>
-          <strong>DNI:</strong> {paciente.dni}
-        </p>
+    <h3 className="text-xl font-extrabold text-slate-900 dark:text-white truncate">
+      {paciente.nombres} {paciente.apellidos}
+    </h3>
 
-        <p>
-          <strong>Teléfono:</strong> {paciente.telefono}
-        </p>
+    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+      Ficha odontológica · Información clínica
+    </p>
+  </div>
 
-        <p>
-          <strong>Estado:</strong> {paciente.estado}
-        </p>
+</div>
 
-        <p>
-          <strong>Médico:</strong> Dr. {medico}
-        </p>
+     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
 
-      </div>
+  <div className="rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/70 p-4 transition-colors">
+    <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500 mb-1.5">
+      DNI
+    </p>
 
+    <p className="text-sm font-bold text-slate-800 dark:text-slate-200 truncate">
+      {paciente.dni}
+    </p>
+  </div>
+
+  <div className="rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/70 p-4 transition-colors">
+    <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500 mb-1.5">
+      Teléfono
+    </p>
+
+    <p className="text-sm font-bold text-slate-800 dark:text-slate-200 truncate">
+      {paciente.telefono}
+    </p>
+  </div>
+
+  <div className="rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/70 p-4 transition-colors">
+    <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500 mb-1.5">
+      Estado
+    </p>
+
+    <div className="flex items-center gap-2">
+      <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+
+      <p className="text-sm font-bold text-emerald-700 dark:text-emerald-400 truncate">
+        {paciente.estado}
+      </p>
+    </div>
+  </div>
+
+  <div className="rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/70 p-4 transition-colors">
+    <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500 mb-1.5">
+      Médico
+    </p>
+
+    <p className="text-sm font-bold text-slate-800 dark:text-slate-200 truncate">
+      Dr. {medico}
+    </p>
+  </div>
+
+</div>
     </div>
 
 
     {/* HISTORIAL ODONTOLÓGICO */}
-    <div>
+    <div className="p-6 md:p-7">
 
-      <button
-        onClick={() => setMostrarHistorial(!mostrarHistorial)}
-        className="
-          w-full
-          flex
-          items-center
-          justify-between
-          px-5
-          py-4
-          rounded-xl
-          border
-          border-slate-300
-          dark:border-slate-700
-          bg-slate-50
-          dark:bg-slate-800
-          hover:bg-slate-100
-          dark:hover:bg-slate-700
-          transition
-          font-bold
-          text-slate-800
-          dark:text-white
-        "
-      >
+      <div className="flex items-center justify-between gap-4 mb-5">
 
-        <span>
-          📋 Historial odontológico
-        </span>
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400 mb-1">
+            Seguimiento
+          </p>
 
-        <span>
-          {mostrarHistorial ? "▲" : "▼"}
-        </span>
+          <h3 className="text-lg font-extrabold text-slate-900 dark:text-white">
+            Historial odontológico
+          </h3>
 
-      </button>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            Registros clínicos anteriores del paciente
+          </p>
+        </div>
+
+        <button
+          onClick={() => setMostrarHistorial(!mostrarHistorial)}
+          className="
+            shrink-0
+            inline-flex
+            items-center
+            gap-2
+            px-3.5
+            py-2.5
+            rounded-xl
+            border
+            border-slate-200
+            dark:border-slate-700
+            bg-slate-50
+            dark:bg-slate-800
+            text-slate-600
+            dark:text-slate-300
+            text-xs
+            font-bold
+            hover:bg-cyan-50
+            dark:hover:bg-cyan-500/10
+            hover:border-cyan-200
+            dark:hover:border-cyan-500/30
+            hover:text-cyan-700
+            dark:hover:text-cyan-300
+            transition-all
+            duration-200
+            cursor-pointer
+          "
+        >
+          <span>
+            {mostrarHistorial ? "Ocultar" : "Ver historial"}
+          </span>
+
+          <span className="text-[10px]">
+            {mostrarHistorial ? "▲" : "▼"}
+          </span>
+        </button>
+
+      </div>
 
 
       {mostrarHistorial && (
-        
-  <div className="mt-4 space-y-3 max-h-[180px] overflow-y-auto pr-2">
+
+        <div className="space-y-3 max-h-[250px] overflow-y-auto pr-1">
 
           {historial.length === 0 ? (
 
-            <div className="text-sm text-slate-500 dark:text-slate-400 p-4 text-center">
-              No hay odontogramas anteriores.
+            <div className="rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-7 text-center">
+
+              <div className="w-10 h-10 mx-auto rounded-xl bg-slate-200 dark:bg-slate-700 flex items-center justify-center mb-3">
+                <span className="text-lg">
+                  📋
+                </span>
+              </div>
+
+              <p className="text-sm font-bold text-slate-700 dark:text-slate-300">
+                No hay odontogramas anteriores
+              </p>
+
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+                Los registros históricos aparecerán aquí.
+              </p>
+
             </div>
 
           ) : (
@@ -993,43 +1084,83 @@ Object.values(datos).forEach((caras) => {
               <div
                 key={item.id}
                 className="
+                  group
+                  rounded-2xl
                   border
                   border-slate-200
                   dark:border-slate-700
-                  rounded-xl
+                  bg-slate-50
+                  dark:bg-slate-800/60
                   p-4
-                  bg-white
-                  dark:bg-slate-900
+                  hover:border-cyan-200
+                  dark:hover:border-cyan-500/30
+                  hover:bg-white
+                  dark:hover:bg-slate-800
+                  transition-all
+                  duration-200
                 "
               >
 
-                <p className="font-bold">
-                  {new Date(item.created_at).toLocaleDateString()}
-                </p>
+                <div className="flex items-start justify-between gap-4">
 
-                <p className="text-sm mt-1">
-                  <strong>Diagnóstico:</strong>{" "}
-                  {item.diagnostico || "Sin diagnóstico"}
-                </p>
+                  <div className="min-w-0">
 
-                <p className="text-sm mt-1">
-                  <strong>Observaciones:</strong>{" "}
-                  {item.observaciones || "Sin observaciones"}
-                </p>
+                    <div className="flex items-center gap-2 mb-2">
 
-                <button
-  onClick={() => verOdontogramaHistorico(item)}
-  className="
-    mt-3
-    text-sm
-    font-semibold
-    text-blue-600
-    hover:text-blue-800
-    dark:text-blue-400
-  "
->
-  Ver odontograma
-</button>
+                      <span className="w-2 h-2 rounded-full bg-cyan-500 shrink-0"></span>
+
+                      <p className="text-sm font-extrabold text-slate-800 dark:text-white">
+                        {new Date(item.created_at).toLocaleDateString()}
+                      </p>
+
+                    </div>
+
+                    <p className="text-xs text-slate-600 dark:text-slate-300">
+                      <span className="font-bold text-slate-700 dark:text-slate-200">
+                        Diagnóstico:
+                      </span>{" "}
+                      {item.diagnostico || "Sin diagnóstico"}
+                    </p>
+
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5">
+                      <span className="font-bold text-slate-600 dark:text-slate-300">
+                        Observaciones:
+                      </span>{" "}
+                      {item.observaciones || "Sin observaciones"}
+                    </p>
+
+                  </div>
+
+                  <button
+                    onClick={() => verOdontogramaHistorico(item)}
+                    className="
+                      shrink-0
+                      px-3
+                      py-2
+                      rounded-xl
+                      bg-white
+                      dark:bg-slate-900
+                      border
+                      border-slate-200
+                      dark:border-slate-700
+                      text-cyan-700
+                      dark:text-cyan-300
+                      text-[11px]
+                      font-extrabold
+                      shadow-sm
+                      hover:bg-cyan-50
+                      dark:hover:bg-cyan-500/10
+                      hover:border-cyan-200
+                      dark:hover:border-cyan-500/30
+                      transition-all
+                      duration-200
+                      cursor-pointer
+                    "
+                  >
+                    Ver odontograma
+                  </button>
+
+                </div>
 
               </div>
 
@@ -1038,7 +1169,7 @@ Object.values(datos).forEach((caras) => {
           )}
 
         </div>
-        
+
       )}
 
     </div>
@@ -1046,6 +1177,7 @@ Object.values(datos).forEach((caras) => {
   </div>
 
 </div>
+
 <div className="bg-white dark:bg-slate-900 rounded-2xl shadow border border-slate-200 dark:border-slate-700 p-6 mb-6">
 
   <h3 className="text-lg font-bold mb-6">
@@ -1073,108 +1205,236 @@ Object.values(datos).forEach((caras) => {
     </div>
 
     {/* Leyenda */}
-    <div className="border rounded-xl p-5 bg-slate-50 dark:bg-slate-800">
+    {/* LEYENDA + RESUMEN */}
+<div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50/80 dark:bg-slate-800/50 p-5">
 
-      <h4 className="text-center font-bold mb-5">
-        Leyenda
+  {/* Cabecera */}
+  <div className="mb-5">
+    <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-cyan-600 dark:text-cyan-400 mb-1">
+      Referencia clínica
+    </p>
+
+    <h4 className="text-base font-extrabold text-slate-900 dark:text-white">
+      Estados dentales
+    </h4>
+
+    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+      Identificación visual de cada estado
+    </p>
+  </div>
+
+  {/* Leyenda */}
+  <div className="space-y-2">
+
+    <div className="flex items-center justify-between rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-3.5 py-3">
+      <div className="flex items-center gap-3">
+        <span className="w-3 h-3 rounded-full bg-green-500 ring-4 ring-green-500/10"></span>
+        <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+          Sano
+        </span>
+      </div>
+    </div>
+
+    <div className="flex items-center justify-between rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-3.5 py-3">
+      <div className="flex items-center gap-3">
+        <span className="w-3 h-3 rounded-full bg-red-500 ring-4 ring-red-500/10"></span>
+        <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+          Caries
+        </span>
+      </div>
+    </div>
+
+    <div className="flex items-center justify-between rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-3.5 py-3">
+      <div className="flex items-center gap-3">
+        <span className="w-3 h-3 rounded-full bg-blue-500 ring-4 ring-blue-500/10"></span>
+        <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+          Restaurado
+        </span>
+      </div>
+    </div>
+
+    <div className="flex items-center justify-between rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-3.5 py-3">
+      <div className="flex items-center gap-3">
+        <span className="w-3 h-3 rounded-full bg-gray-600 ring-4 ring-gray-600/10"></span>
+        <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+          Extraído
+        </span>
+      </div>
+    </div>
+
+  </div>
+
+  {/* Separador */}
+  <div className="my-5 border-t border-slate-200 dark:border-slate-700"></div>
+
+  {/* Resumen */}
+  <div>
+    <div className="flex items-center justify-between mb-3">
+      <h4 className="text-sm font-extrabold text-slate-900 dark:text-white">
+        Resumen clínico
       </h4>
 
-      <div className="space-y-3">
+      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+        Estado actual
+      </span>
+    </div>
 
-        <div className="flex items-center gap-3">
-          <span className="w-4 h-4 rounded-full bg-green-500"></span>
-          <span>Sano</span>
-        </div>
+    <div className="grid grid-cols-2 gap-2">
 
-        <div className="flex items-center gap-3">
-          <span className="w-4 h-4 rounded-full bg-red-500"></span>
-          <span>Caries</span>
-        </div>
+      <div className="rounded-xl bg-green-50 dark:bg-green-500/10 border border-green-100 dark:border-green-500/20 p-3">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-green-600 dark:text-green-400">
+          Sanos
+        </p>
+        <p className="text-xl font-extrabold text-green-700 dark:text-green-300 mt-1">
+          {resumen.sano}
+        </p>
+      </div>
 
-        <div className="flex items-center gap-3">
-          <span className="w-4 h-4 rounded-full bg-blue-500"></span>
-          <span>Restaurado</span>
-        </div>
+      <div className="rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20 p-3">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-red-600 dark:text-red-400">
+          Caries
+        </p>
+        <p className="text-xl font-extrabold text-red-700 dark:text-red-300 mt-1">
+          {resumen.caries}
+        </p>
+      </div>
 
-        <div className="flex items-center gap-3">
-          <span className="w-4 h-4 rounded-full bg-gray-600"></span>
-          <span>Extraído</span>
-        </div>
+      <div className="rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/20 p-3">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">
+          Restaurados
+        </p>
+        <p className="text-xl font-extrabold text-blue-700 dark:text-blue-300 mt-1">
+          {resumen.restaurado}
+        </p>
+      </div>
 
-        <hr className="my-5" />
-
-        <h4 className="font-bold">
-          Resumen
-        </h4>
-
-     <p>🟢 Sanos: {resumen.sano}</p>
-
-<p>🔴 Caries: {resumen.caries}</p>
-
-<p>🔵 Restaurados: {resumen.restaurado}</p>
-
-<p>⚫ Extraídos: {resumen.extraido}</p>
-
+      <div className="rounded-xl bg-slate-100 dark:bg-slate-700/60 border border-slate-200 dark:border-slate-600 p-3">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          Extraídos
+        </p>
+        <p className="text-xl font-extrabold text-slate-700 dark:text-slate-200 mt-1">
+          {resumen.extraido}
+        </p>
       </div>
 
     </div>
+  </div>
+
+</div>
 
   </div>
 
 </div>
 
-<div className="bg-white dark:bg-slate-900 rounded-2xl shadow border border-slate-200 dark:border-slate-700 p-6 mb-6">
 
-  <h3 className="text-lg font-bold mb-4">
-    Observaciones Clínicas
-  </h3>
+<div className="bg-white dark:bg-slate-900 rounded-[24px] border border-slate-200 dark:border-slate-800 shadow-sm p-6 mb-6">
+
+  <div className="flex items-start gap-3 mb-5">
+
+    <div className="w-10 h-10 rounded-xl bg-cyan-50 dark:bg-cyan-500/10 border border-cyan-200 dark:border-cyan-500/20 flex items-center justify-center shrink-0">
+      <span className="text-base">📝</span>
+    </div>
+
+    <div>
+      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-cyan-600 dark:text-cyan-400 mb-1">
+        Registro clínico
+      </p>
+
+      <h3 className="text-lg font-extrabold text-slate-900 dark:text-white">
+        Observaciones clínicas
+      </h3>
+
+      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+        Registre hallazgos, procedimientos o información relevante de la consulta.
+      </p>
+    </div>
+
+  </div>
 
   <input
     type="text"
     value={observaciones}
     onChange={(e) => setObservaciones(e.target.value)}
-    placeholder="Escriba observaciones clínicas..."
+    placeholder="Escriba las observaciones clínicas..."
     className="
       w-full
-      rounded-lg
+      rounded-2xl
       border
-      border-slate-300
+      border-slate-200
       dark:border-slate-700
-      bg-white
-      dark:bg-slate-800
-      p-3
+      bg-slate-50
+      dark:bg-slate-800/70
+      px-4
+      py-3.5
+      text-sm
+      text-slate-800
+      dark:text-slate-200
+      placeholder:text-slate-400
+      dark:placeholder:text-slate-500
       outline-none
-      focus:ring-2
-      focus:ring-blue-500
+      transition-all
+      duration-200
+      focus:border-cyan-400
+      dark:focus:border-cyan-500
+      focus:ring-4
+      focus:ring-cyan-500/10
     "
   />
 
 </div>
 
 
-<div className="bg-white dark:bg-slate-900 rounded-2xl shadow border border-slate-200 dark:border-slate-700 p-6 mb-6">
+<div className="bg-white dark:bg-slate-900 rounded-[24px] border border-slate-200 dark:border-slate-800 shadow-sm p-6 mb-6">
 
-  <h3 className="text-lg font-bold mb-4">
-    Diagnóstico
-  </h3>
+  <div className="flex items-start gap-3 mb-5">
+
+    <div className="w-10 h-10 rounded-xl bg-violet-50 dark:bg-violet-500/10 border border-violet-200 dark:border-violet-500/20 flex items-center justify-center shrink-0">
+      <span className="text-base">🩺</span>
+    </div>
+
+    <div>
+      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-violet-600 dark:text-violet-400 mb-1">
+        Evaluación clínica
+      </p>
+
+      <h3 className="text-lg font-extrabold text-slate-900 dark:text-white">
+        Diagnóstico
+      </h3>
+
+      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+        Registre el diagnóstico clínico asociado a la evaluación odontológica.
+      </p>
+    </div>
+
+  </div>
 
   <input
     type="text"
     value={diagnostico}
     onChange={(e) => setDiagnostico(e.target.value)}
-    placeholder="Ingrese el diagnóstico..."
+    placeholder="Ingrese el diagnóstico clínico..."
     className="
       w-full
-      rounded-lg
+      rounded-2xl
       border
-      border-slate-300
+      border-slate-200
       dark:border-slate-700
-      bg-white
-      dark:bg-slate-800
-      p-3
+      bg-slate-50
+      dark:bg-slate-800/70
+      px-4
+      py-3.5
+      text-sm
+      text-slate-800
+      dark:text-slate-200
+      placeholder:text-slate-400
+      dark:placeholder:text-slate-500
       outline-none
-      focus:ring-2
-      focus:ring-blue-500
+      transition-all
+      duration-200
+      focus:border-violet-400
+      dark:focus:border-violet-500
+      focus:ring-4
+      focus:ring-violet-500/10
     "
   />
 
@@ -1318,47 +1578,89 @@ Cerrar
   </div>
 )}
 
+{/* BOTONES */}
 
-      {/* BOTONES */}
+<div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-800">
 
-<div className="flex justify-end gap-4 mt-6">
+  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 
-  <button
-  onClick={guardarOdontograma}
-    className="
-      px-6
-      py-2
-      rounded-xl
-      bg-blue-600
-      hover:bg-blue-700
-      text-white
-      font-semibold
-      shadow
-    "
-  >
-    💾 Guardar
-  </button>
+    {/* Texto de apoyo */}
+    <div>
+      <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+        
+      </p>
 
- <button
-  onClick={exportarPDF}
-  className="
-    px-6
-    py-2
-    rounded-xl
-    bg-slate-700
-    hover:bg-slate-800
-    text-white
-    font-semibold
-    shadow
-  "
->
-  📄 Exportar PDF
-</button>
+      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+        
+      </p>
+    </div>
 
+    {/* Acciones */}
+    <div className="flex flex-col sm:flex-row gap-3">
 
+      <button
+        onClick={exportarPDF}
+        className="
+          inline-flex
+          items-center
+          justify-center
+          gap-2
+          px-5
+          py-3
+          rounded-xl
+          border
+          border-slate-200
+          dark:border-slate-700
+          bg-white
+          dark:bg-slate-800
+          hover:bg-slate-50
+          dark:hover:bg-slate-700
+          text-slate-700
+          dark:text-slate-200
+          font-semibold
+          text-sm
+          shadow-sm
+          hover:shadow
+          transition-all
+          duration-200
+        "
+      >
+        <span>📄</span>
+        Exportar PDF
+      </button>
 
+      <button
+        onClick={guardarOdontograma}
+        className="
+          inline-flex
+          items-center
+          justify-center
+          gap-2
+          px-6
+          py-3
+          rounded-xl
+          bg-cyan-600
+          hover:bg-cyan-700
+          dark:bg-cyan-500
+          dark:hover:bg-cyan-400
+          text-white
+          dark:text-slate-950
+          font-bold
+          text-sm
+          shadow-sm
+          hover:shadow-md
+          transition-all
+          duration-200
+        "
+      >
+        <span>💾</span>
+        Guardar odontograma
+      </button>
+
+    </div>
+
+  </div>
 
 </div>
-    </div>
-  );
-}
+</div>
+)}
