@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
+import jsPDF from "jspdf";
 
 interface Consulta {
   id: number;
@@ -182,6 +183,283 @@ export const PlanTratamientoPanel = () => {
       total + Number(consulta.costo || 0),
     0
   );
+
+  const exportarPDF = async () => {
+    if (!pacienteSeleccionado) {
+      setMensaje("Primero debes seleccionar un paciente para exportar el plan.");
+      return;
+    }
+
+    // Obtener el nombre del médico vinculado a la sesión actual.
+    let nombreDoctor = "No registrado";
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user) {
+        const { data: medico } = await supabase
+          .from("medicos")
+          .select("*")
+          .eq("auth_user_id", user.id)
+          .maybeSingle();
+
+        if (medico) {
+          const registro = medico as Record<string, unknown>;
+          const nombres = String(registro.nombres ?? registro.nombre ?? "").trim();
+          const apellidos = String(registro.apellidos ?? registro.apellido ?? "").trim();
+          const nombreCompleto = String(
+            registro.nombre_completo ?? registro.nombreCompleto ?? ""
+          ).trim();
+
+          nombreDoctor =
+            nombreCompleto ||
+            [nombres, apellidos].filter(Boolean).join(" ") ||
+            "No registrado";
+        }
+      }
+    } catch (error) {
+      console.error("No se pudo obtener el nombre del médico para el PDF:", error);
+    }
+
+    const doc = new jsPDF("p", "mm", "a4");
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 16;
+    const contentWidth = pageWidth - margin * 2;
+    const today = new Date();
+    const fechaEmision = today.toLocaleDateString("es-PE", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+    });
+
+    const cyan = [8, 145, 178] as [number, number, number];
+    const dark = [30, 41, 59] as [number, number, number];
+    const muted = [100, 116, 139] as [number, number, number];
+    const line = [226, 232, 240] as [number, number, number];
+    const pale = [236, 254, 255] as [number, number, number];
+
+    let y = 16;
+
+    // Encabezado institucional
+    doc.setFillColor(...cyan);
+    doc.roundedRect(margin, y, contentWidth, 25, 3, 3, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(16);
+    doc.text("VILLA 920 DENTAL", margin + 6, y + 10);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.text("SALUD · ESTÉTICA · BIENESTAR", margin + 6, y + 16);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.text("PLAN DE TRATAMIENTO", pageWidth - margin - 6, y + 11, {
+      align: "right",
+    });
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.text(`Emisión: ${fechaEmision}`, pageWidth - margin - 6, y + 17, {
+      align: "right",
+    });
+
+    y += 34;
+
+    // Identificación organizada en dos columnas: paciente y médico responsable.
+    doc.setTextColor(...dark);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.text("DATOS DEL PACIENTE", margin, y);
+    y += 5;
+
+    const patientBoxY = y;
+    const patientBoxHeight = 31;
+    const innerPadding = 5;
+    const dividerX = margin + contentWidth * 0.62;
+    doc.setDrawColor(...line);
+    doc.setFillColor(248, 250, 252);
+    doc.roundedRect(
+      margin,
+      patientBoxY,
+      contentWidth,
+      patientBoxHeight,
+      2.5,
+      2.5,
+      "FD"
+    );
+    doc.setDrawColor(203, 213, 225);
+    doc.setLineWidth(0.3);
+    doc.line(dividerX, patientBoxY + 4, dividerX, patientBoxY + patientBoxHeight - 4);
+
+    const nombrePaciente = `${pacienteSeleccionado.nombres} ${pacienteSeleccionado.apellidos}`;
+    const leftX = margin + innerPadding;
+    const rightX = dividerX + innerPadding;
+    const rightWidth = margin + contentWidth - rightX - innerPadding;
+
+    // Columna izquierda: etiquetas y valores en filas alineadas.
+    const labelX = leftX;
+    const valueX = leftX + 24;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(...muted);
+    doc.text("PACIENTE", labelX, patientBoxY + 8);
+    doc.text("DNI", labelX, patientBoxY + 17);
+    doc.text("TELÉFONO", labelX, patientBoxY + 26);
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.setTextColor(...dark);
+    const patientValueWidth = dividerX - valueX - 4;
+    const nombrePacienteLineas = doc.splitTextToSize(nombrePaciente, patientValueWidth);
+    doc.text(nombrePacienteLineas.slice(0, 1), valueX, patientBoxY + 8);
+    doc.text(pacienteSeleccionado.dni || "No registrado", valueX, patientBoxY + 17);
+    doc.text(pacienteSeleccionado.telefono || "No registrado", valueX, patientBoxY + 26);
+
+    // Columna derecha: doctor con la misma estructura etiqueta / valor.
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(...muted);
+    doc.text("DOCTOR", rightX, patientBoxY + 8);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.setTextColor(...dark);
+    const doctorLineas = doc.splitTextToSize(nombreDoctor, rightWidth);
+    doc.text(doctorLineas.slice(0, 2), rightX, patientBoxY + 15);
+
+    y += 40;
+
+    // Título y resumen
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.setTextColor(...dark);
+    doc.text("DETALLE DEL PLAN", margin, y);
+    y += 6;
+
+    doc.setFillColor(...pale);
+    doc.setDrawColor(165, 243, 252);
+    doc.roundedRect(margin, y, contentWidth, 17, 2, 2, "FD");
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(...muted);
+    doc.text("Nombre del plan", margin + 5, y + 6);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.setTextColor(...dark);
+    const titulo = tituloPlan.trim() || "Plan de tratamiento odontológico";
+    doc.text(doc.splitTextToSize(titulo, contentWidth - 10).slice(0, 2), margin + 5, y + 12);
+
+    y += 25;
+
+    // Tabla de consultas
+    const col = {
+      numero: margin + 2,
+      procedimiento: margin + 16,
+      observaciones: margin + 91,
+      costo: pageWidth - margin - 3,
+    };
+    const procedureWidth = 70;
+    const observationWidth = 52;
+
+    const dibujarCabeceraTabla = () => {
+      doc.setFillColor(...cyan);
+      doc.roundedRect(margin, y, contentWidth, 9, 1.5, 1.5, "F");
+      doc.setTextColor(255, 255, 255);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(7.5);
+      doc.text("N.º", col.numero, y + 5.8);
+      doc.text("PROCEDIMIENTO", col.procedimiento, y + 5.8);
+      doc.text("OBSERVACIONES", col.observaciones, y + 5.8);
+      doc.text("COSTO (S/.)", col.costo, y + 5.8, { align: "right" });
+      y += 12;
+    };
+
+    dibujarCabeceraTabla();
+
+    consultas.forEach((consulta, index) => {
+      const procedimiento = consulta.procedimiento.trim() || "Por definir";
+      const observaciones = consulta.observaciones.trim() || "—";
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      const procedimientoLineas = doc.splitTextToSize(procedimiento, procedureWidth);
+      const observacionesLineas = doc.splitTextToSize(observaciones, observationWidth);
+      const lineas = Math.max(procedimientoLineas.length, observacionesLineas.length, 1);
+      const rowHeight = Math.max(11, lineas * 4 + 5);
+
+      if (y + rowHeight > pageHeight - 25) {
+        doc.addPage();
+        y = 18;
+        dibujarCabeceraTabla();
+      }
+
+      if (index % 2 === 0) {
+        doc.setFillColor(248, 250, 252);
+        doc.rect(margin, y - 3, contentWidth, rowHeight, "F");
+      }
+      doc.setDrawColor(...line);
+      doc.line(margin, y + rowHeight - 3, pageWidth - margin, y + rowHeight - 3);
+
+      doc.setTextColor(...dark);
+      doc.text(String(consulta.id).padStart(2, "0"), col.numero, y + 3);
+      doc.text(procedimientoLineas, col.procedimiento, y + 3);
+      doc.setTextColor(...muted);
+      doc.text(observacionesLineas, col.observaciones, y + 3);
+      doc.setTextColor(...dark);
+      doc.setFont("helvetica", "bold");
+      doc.text(Number(consulta.costo || 0).toLocaleString("es-PE", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }), col.costo, y + 3, { align: "right" });
+
+      y += rowHeight;
+    });
+
+    y += 7;
+    if (y + 32 > pageHeight - 20) {
+      doc.addPage();
+      y = 20;
+    }
+
+    // Resumen económico
+    doc.setFillColor(248, 250, 252);
+    doc.setDrawColor(...line);
+    doc.roundedRect(margin, y, contentWidth, 25, 2, 2, "FD");
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(...muted);
+    doc.text("Consultas programadas", margin + 5, y + 8);
+    doc.text("Costo total del plan", pageWidth - margin - 5, y + 8, {
+      align: "right",
+    });
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12);
+    doc.setTextColor(...dark);
+    doc.text(String(consultas.length), margin + 5, y + 17);
+    doc.setTextColor(...cyan);
+    doc.text(`S/. ${totalConsultas.toFixed(2)}`, pageWidth - margin - 5, y + 17, {
+      align: "right",
+    });
+
+    y += 33;
+    if (y > pageHeight - 17) {
+      doc.addPage();
+      y = 20;
+    }
+    doc.setDrawColor(...line);
+    doc.line(margin, pageHeight - 13, pageWidth - margin, pageHeight - 13);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7);
+    doc.setTextColor(...muted);
+    doc.text("Documento de planificación del tratamiento odontológico.", margin, pageHeight - 8);
+    doc.text("VILLA 920 DENTAL", pageWidth - margin, pageHeight - 8, {
+      align: "right",
+    });
+
+    const nombreArchivo = `Plan_Tratamiento_${pacienteSeleccionado.apellidos
+      .trim()
+      .replace(/\s+/g, "_")}_${today.toISOString().slice(0, 10)}.pdf`;
+    doc.save(nombreArchivo);
+    setMensaje("PDF del plan de tratamiento generado.");
+  };
 
   const guardarPlan = async () => {
     if (!pacienteSeleccionado) {
@@ -1539,9 +1817,32 @@ export const PlanTratamientoPanel = () => {
 
           <div className="
             flex
-            justify-end
+            flex-col-reverse
+            sm:flex-row
+            sm:justify-end
+            gap-3
             mt-6
           ">
+
+            <button
+              type="button"
+              onClick={exportarPDF}
+              className="
+                px-6
+                py-3
+                rounded-xl
+                border
+                border-cyan-600
+                text-cyan-700
+                dark:text-cyan-300
+                hover:bg-cyan-50
+                dark:hover:bg-cyan-500/10
+                font-semibold
+                transition
+              "
+            >
+              📄 Exportar PDF
+            </button>
 
             <button
               onClick={guardarPlan}

@@ -1,9 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import {
   LayoutDashboard,
   Users,
   CalendarRange,
+  CalendarDays,
   Clock3,
   Sun,
   Moon,
@@ -176,6 +178,13 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
       icon: CalendarRange,
       roles: ['admin', 'recepcionista', 'medico'],
     },
+    {
+  id: 'agenda-semanal',
+  label: 'Agenda semanal',
+  description: 'Cronograma por semana',
+  icon: CalendarDays,
+  roles: ['admin', 'recepcionista', 'medico']
+},
     {
       id: 'historia-clinica',
       label: 'Historia Clínica',

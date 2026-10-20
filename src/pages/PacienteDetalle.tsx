@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import Odontograma from "../components/Odontograma";
@@ -72,13 +73,10 @@ if (!citasData || citasData.length === 0) {
   return;
 }
 
-const citaData = citasData.find((cita) => {
-  const fechaHora = new Date(`${cita.fecha}T${cita.hora}`);
-  return fechaHora <= new Date();
-});
+const citaData = citasData[0];
 
 if (!citaData) {
-  console.log("No hay una cita actual o pasada.");
+  console.log("No hay citas.");
   return;
 }
 

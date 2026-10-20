@@ -26,7 +26,7 @@ const categorias = [
   "Ortodoncia",
 ];
 
-const tratamientos: Tratamiento[] = [
+export const tratamientos: Tratamiento[] = [
   {
     id: 1,
     nombre: "Limpieza dental",

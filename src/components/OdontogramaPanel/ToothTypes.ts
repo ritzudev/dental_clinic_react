@@ -1,18 +1,40 @@
-export type Estado = "sano" | "caries" | "extraido" | "restaurado";
 
-export interface ToothProps {
-  numero: number;
-  estado?: Estado;
-  onClick: (e: React.MouseEvent<HTMLDivElement>) => void;
+import type { MouseEvent } from "react";
+
+
+export type Estado =
+  | "sano"
+  | "caries"
+  | "extraido"
+  | "restaurado";
+
+
+export type CaraDental =
+  | "top"
+  | "right"
+  | "bottom"
+  | "left"
+  | "center";
+
+
+export interface CarasDentales {
+  top?: Estado;
+  right?: Estado;
+  bottom?: Estado;
+  left?: Estado;
+  center?: Estado;
 }
 
+
 export interface ToothProps {
   numero: number;
-  estado?: Estado;
+  estado?: Estado | CarasDentales;
 
-  onFaceClick: (
+  onClick?: (e: MouseEvent<HTMLDivElement>) => void;
+
+  onFaceClick?: (
     numero: number,
-    face: "top" | "right" | "bottom" | "left" | "center",
-    e: React.MouseEvent
+    face: CaraDental,
+    e: MouseEvent
   ) => void;
 }

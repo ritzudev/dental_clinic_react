@@ -1,4 +1,5 @@
 
+
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 
@@ -25,11 +26,43 @@ interface OdontogramaProps {
 }
 
 
-const dientes = [
-  18,17,16,15,14,13,12,11,
-  21,22,23,24,25,26,27,28,
-  48,47,46,45,44,43,42,41,
-  31,32,33,34,35,36,37,38
+type Denticion = "temporal" | "mixta" | "permanente";
+
+type GrupoDientes = {
+  id: string;
+  nombre: string;
+  dientes: number[];
+};
+
+const dientesPermanentes = [
+  18, 17, 16, 15, 14, 13, 12, 11,
+  21, 22, 23, 24, 25, 26, 27, 28,
+  48, 47, 46, 45, 44, 43, 42, 41,
+  31, 32, 33, 34, 35, 36, 37, 38,
+];
+
+// Dentición temporal según la nomenclatura FDI.
+const dientesTemporales = [
+  55, 54, 53, 52, 51,
+  61, 62, 63, 64, 65,
+  85, 84, 83, 82, 81,
+  71, 72, 73, 74, 75,
+];
+
+// Orden de lectura por cuadrante. En dentición mixta se muestran
+// únicamente los dientes que el profesional marque como presentes.
+const ordenDientesMixtos = [
+  18, 17, 16, 15, 14, 13, 12, 11, 55, 54, 53, 52, 51,
+  61, 62, 63, 64, 65, 21, 22, 23, 24, 25, 26, 27, 28,
+  48, 47, 46, 45, 44, 43, 42, 41, 85, 84, 83, 82, 81,
+  71, 72, 73, 74, 75, 31, 32, 33, 34, 35, 36, 37, 38,
+];
+
+const gruposDisponibles: GrupoDientes[] = [
+  { id: "superior-derecho", nombre: "Superior derecho", dientes: [18,17,16,15,14,13,12,11,55,54,53,52,51] },
+  { id: "superior-izquierdo", nombre: "Superior izquierdo", dientes: [61,62,63,64,65,21,22,23,24,25,26,27,28] },
+  { id: "inferior-derecho", nombre: "Inferior derecho", dientes: [48,47,46,45,44,43,42,41,85,84,83,82,81] },
+  { id: "inferior-izquierdo", nombre: "Inferior izquierdo", dientes: [71,72,73,74,75,31,32,33,34,35,36,37,38] },
 ];
 
 export default function Odontograma({
@@ -65,6 +98,38 @@ console.log("Cita:", citaId);
 };
 
 const [datos, setDatos] = useState<Record<number, Caras>>({});
+const [denticion, setDenticion] = useState<Denticion>("permanente");
+const [denticionSugerida, setDenticionSugerida] = useState<Denticion>("permanente");
+const [edadPaciente, setEdadPaciente] = useState<number | null>(null);
+const [dientesMixtos, setDientesMixtos] = useState<number[]>([]);
+
+const gruposDientesActivos: GrupoDientes[] = gruposDisponibles.map((grupo) => {
+  let permitidos: number[] = [];
+
+  if (denticion === "permanente") {
+    permitidos = dientesPermanentes;
+  } else if (denticion === "temporal") {
+    permitidos = dientesTemporales;
+  } else {
+    permitidos = dientesMixtos;
+  }
+
+  return {
+    ...grupo,
+    dientes: grupo.dientes.filter((numero) => permitidos.includes(numero)),
+  };
+});
+
+const dientesActivos = gruposDientesActivos.flatMap((grupo) => grupo.dientes);
+
+const alternarDienteMixto = (numero: number) => {
+  setDientesMixtos((actuales) => {
+    if (actuales.includes(numero)) {
+      return actuales.filter((diente) => diente !== numero);
+    }
+    return ordenDientesMixtos.filter((diente) => actuales.includes(diente) || diente === numero);
+  });
+};
 
 const [observaciones, setObservaciones] = useState("");
 const [diagnostico, setDiagnostico] = useState("");
@@ -83,7 +148,7 @@ useEffect(() => {
 
 useEffect(() => {
   cargarOdontograma();
-}, [citaId]);
+}, [citaId, paciente.id]);
 
 
 
@@ -120,9 +185,43 @@ const verOdontogramaHistorico = (odontograma: any) => {
 
 
 const cargarOdontograma = async () => {
-  if (!citaId) return;
+  if (!citaId || !paciente.id) return;
 
-  
+  // La fecha de nacimiento ya pertenece a la tabla pacientes.
+  // Solo la consultamos; no se modifica ninguna tabla ni columna.
+  let edadCalculada: number | null = null;
+  let sugerencia: Denticion = "permanente";
+
+  const { data: datosPaciente, error: errorPaciente } = await supabase
+    .from("pacientes")
+    .select("fecha_nacimiento")
+    .eq("id", paciente.id)
+    .maybeSingle();
+
+  if (errorPaciente) {
+    console.warn("No se pudo consultar la fecha de nacimiento para sugerir la dentición:", errorPaciente.message);
+  }
+
+  if (datosPaciente?.fecha_nacimiento) {
+    const nacimiento = new Date(`${datosPaciente.fecha_nacimiento}T00:00:00`);
+    if (!Number.isNaN(nacimiento.getTime())) {
+      const hoy = new Date();
+      edadCalculada = hoy.getFullYear() - nacimiento.getFullYear();
+      const aunNoCumple =
+        hoy.getMonth() < nacimiento.getMonth() ||
+        (hoy.getMonth() === nacimiento.getMonth() && hoy.getDate() < nacimiento.getDate());
+      if (aunNoCumple) edadCalculada -= 1;
+      if (edadCalculada < 0) edadCalculada = null;
+    }
+  }
+
+  // Es una sugerencia orientativa, no un diagnóstico dental automático.
+  if (edadCalculada !== null) {
+    sugerencia = edadCalculada <= 5 ? "temporal" : edadCalculada <= 12 ? "mixta" : "permanente";
+  }
+  setEdadPaciente(edadCalculada);
+  setDenticionSugerida(sugerencia);
+
   const { data, error } = await supabase
     .from("odontogramas")
     .select("*")
@@ -136,14 +235,54 @@ const cargarOdontograma = async () => {
 
   if (!data) {
     console.log("Esta cita todavía no tiene odontograma.");
+    // Evita mostrar datos de la cita anterior cuando se abre una cita nueva.
+    setDatos({});
+    setObservaciones("");
+    setDiagnostico("");
+    setDenticion(sugerencia);
+    setDientesMixtos([]);
     return;
   }
 
   console.log("ODONTOGRAMA CARGADO:", data);
 
-  setDatos(data.datos || {});
+  const datosGuardados = data.datos || {};
+  const meta = datosGuardados._meta;
+  const datosDentales = { ...datosGuardados };
+  delete datosDentales._meta;
+
+  setDatos(datosDentales as Record<number, Caras>);
   setObservaciones(data.observaciones || "");
   setDiagnostico(data.diagnostico || "");
+
+  const numerosDentalesGuardados = Object.keys(datosDentales)
+    .map(Number)
+    .filter((numero) => ordenDientesMixtos.includes(numero));
+  const hayTemporales = numerosDentalesGuardados.some((numero) => dientesTemporales.includes(numero));
+  const hayPermanentes = numerosDentalesGuardados.some((numero) => dientesPermanentes.includes(numero));
+
+  // Los odontogramas antiguos no tienen metadatos de dentición. Inferimos
+  // la vista a partir de las piezas guardadas para no ocultar registros previos.
+  const denticionAntiguaInferida: Denticion = hayTemporales && hayPermanentes
+    ? "mixta"
+    : hayTemporales
+      ? "temporal"
+      : hayPermanentes
+        ? "permanente"
+        : sugerencia;
+
+  const denticionGuardada = meta?.denticion;
+  const denticionFinal: Denticion =
+    denticionGuardada === "temporal" || denticionGuardada === "mixta" || denticionGuardada === "permanente"
+      ? denticionGuardada
+      : denticionAntiguaInferida;
+  setDenticion(denticionFinal);
+
+  const dientesMixtosGuardados = Array.isArray(meta?.dientesMixtos)
+    ? meta.dientesMixtos.filter((numero: number) => ordenDientesMixtos.includes(numero))
+    : numerosDentalesGuardados;
+
+  setDientesMixtos(ordenDientesMixtos.filter((numero) => dientesMixtosGuardados.includes(numero)));
 };
 
 
@@ -201,7 +340,15 @@ const guardarOdontograma = async () => {
           paciente_id: paciente.id,
           medico_id: medicoId,
           cita_id: citaId,
-          datos: datos,
+          // La tabla y sus columnas no cambian: la dentición se guarda como
+          // metadato dentro del JSON existente de la columna "datos".
+          datos: {
+            ...datos,
+            _meta: {
+              denticion,
+              dientesMixtos: ordenDientesMixtos.filter((numero) => dientesMixtos.includes(numero)),
+            },
+          },
           observaciones: observaciones,
           diagnostico: diagnostico,
           updated_at: new Date().toISOString(),
@@ -236,112 +383,49 @@ setTimeout(() => {
   }
 };
 
+
+
+
+
+
+
 const exportarPDF = () => {
   const doc = new jsPDF("p", "mm", "a4");
 
-  // =========================
-  // CONFIGURACIÓN
-  // =========================
+  // =====================================================
+  // CONFIGURACIÓN GENERAL
+  // =====================================================
 
+  const W = 210;
+  const H = 297;
   const margen = 15;
-  const anchoPagina = 210;
-  const centroPagina = anchoPagina / 2;
+  const centro = W / 2;
 
-  // =========================
-  // ENCABEZADO
-  // =========================
+  const C = {
+    cyan: [8, 145, 178],
+    cyanDark: [14, 116, 144],
 
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(16);
+    texto: [15, 23, 42],
+    texto2: [51, 65, 85],
+    texto3: [100, 116, 139],
 
-  doc.text("NOMBRE DE LA CLÍNICA", margen, 20);
+    borde: [226, 232, 240],
+    fondo: [248, 250, 252],
+    fondoAzul: [239, 246, 255],
 
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-
-  doc.text("Dirección de la clínica", margen, 26);
-  doc.text("Teléfono: ____________________", margen, 31);
-
-  doc.line(margen, 38, anchoPagina - margen, 38);
-
-  // =========================
-  // TÍTULO
-  // =========================
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(15);
-
-  doc.text(
-    "ODONTOGRAMA DENTAL",
-    centroPagina,
-    48,
-    { align: "center" }
-  );
-
-  // =========================
-  // DATOS DEL PACIENTE
-  // =========================
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(10);
-
-  doc.text(
-    `Paciente: ${paciente.nombres} ${paciente.apellidos}`,
-    margen,
-    60
-  );
-
-  doc.text(`DNI: ${paciente.dni}`, margen, 67);
-
-  doc.text(`Médico: Dr. ${medico}`, margen, 74);
-
-  doc.text(
-    `Fecha: ${new Date().toLocaleDateString("es-PE")}`,
-    120,
-    74
-  );
-
-  doc.line(
-    margen,
-    80,
-    anchoPagina - margen,
-    80
-  );
-
-  // =========================
-  // TÍTULO ODONTOGRAMA
-  // =========================
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(12);
-
-  doc.text(
-    "ODONTOGRAMA",
-    centroPagina,
-    90,
-    { align: "center" }
-  );
+    sano: [34, 197, 94],
+    caries: [239, 68, 68],
+    restaurado: [59, 130, 246],
+    extraido: [100, 116, 139],
+  };
 
   // =====================================================
-  // CONFIGURACIÓN DE LOS DIENTES
+  // COLOR SEGÚN ESTADO
   // =====================================================
 
-  const inicioX = 15;
-  const inicioY = 100;
-
-  const espacioDiente = 11.25;
-  const espacioFilas = 25;
-
-  // =====================================================
-  // TIPO DE DIENTE
-  // =====================================================
-
-  
-  // ------------------------------------
-// OBTENER COLOR DEL ESTADO
-// ------------------------------------
-
-const obtenerColorEstado = (estado?: Estado) => {
+ const obtenerColorEstado = (
+  estado?: Estado
+): [number, number, number] => {
   switch (estado) {
     case "sano":
       return [34, 197, 94];
@@ -359,452 +443,1327 @@ const obtenerColorEstado = (estado?: Estado) => {
       return [255, 255, 255];
   }
 };
+  // =====================================================
+  // FONDO
+  // =====================================================
 
+  doc.setFillColor(255, 255, 255);
+  doc.rect(0, 0, W, H, "F");
 
-// ------------------------------------
-// DIBUJAR UNA CARA
-// ------------------------------------
+  // =====================================================
+  // LOGO SIMPLE DE LA CLÍNICA
+  // =====================================================
 
-const dibujarCara = (
-  puntos: [number, number][],
-  estado?: Estado
-) => {
-
-  const [r, g, b] = obtenerColorEstado(estado);
-
-  const [p1, p2, p3, p4] = puntos;
-
-  // Relleno
-  doc.setFillColor(r, g, b);
-
-  doc.triangle(
-    p1[0], p1[1],
-    p2[0], p2[1],
-    p3[0], p3[1],
-    "F"
+  // Diente estilizado del logo
+  doc.setDrawColor(
+    C.cyan[0],
+    C.cyan[1],
+    C.cyan[2]
   );
 
-  doc.triangle(
-    p1[0], p1[1],
-    p3[0], p3[1],
-    p4[0], p4[1],
-    "F"
+  doc.setLineWidth(0.9);
+
+  const lx = margen + 5;
+  const ly = 11;
+
+  doc.line(lx - 3, ly + 1, lx - 2, ly + 8);
+  doc.line(lx - 2, ly + 8, lx, ly + 13);
+  doc.line(lx, ly + 13, lx + 2, ly + 8);
+  doc.line(lx + 2, ly + 8, lx + 3, ly + 1);
+
+  doc.line(lx - 3, ly + 1, lx - 1, ly);
+  doc.line(lx - 1, ly, lx, ly + 2);
+  doc.line(lx, ly + 2, lx + 1, ly);
+  doc.line(lx + 1, ly, lx + 3, ly + 1);
+
+  // =====================================================
+  // NOMBRE DE LA CLÍNICA
+  // =====================================================
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(15);
+
+  doc.setTextColor(
+    C.cyanDark[0],
+    C.cyanDark[1],
+    C.cyanDark[2]
   );
 
-  // Bordes internos
-  doc.setDrawColor(90, 90, 90);
-  doc.setLineWidth(0.22);
+  doc.text(
+    "VILLA 920 DENTAL",
+    margen + 12,
+    14
+  );
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(6.5);
+
+  doc.setTextColor(
+    C.texto3[0],
+    C.texto3[1],
+    C.texto3[2]
+  );
+
+  doc.text(
+    "SALUD · ESTÉTICA · BIENESTAR",
+    margen + 12,
+    19
+  );
+
+  // =====================================================
+  // DATOS DE LA CLÍNICA — DERECHA
+  // =====================================================
+
+  doc.setFontSize(6.2);
+
+  doc.text(
+    "Av. Javier Prado Este 996 - Of. 901 - San Isidro - Lima, 051",
+    W - margen,
+    10,
+    { align: "right" }
+  );
+
+  doc.text(
+    "Teléfono: +51 ____________________",
+    W - margen,
+    15,
+    { align: "right" }
+  );
+
+  doc.text(
+    "Documento clínico odontológico",
+    W - margen,
+    20,
+    { align: "right" }
+  );
+
+  // =====================================================
+  // LÍNEA SUPERIOR
+  // =====================================================
+
+  doc.setDrawColor(
+    C.cyan[0],
+    C.cyan[1],
+    C.cyan[2]
+  );
+
+  doc.setLineWidth(0.8);
 
   doc.line(
-    p1[0], p1[1],
-    p2[0], p2[1]
+    margen,
+    25,
+    W - margen,
+    25
   );
 
-  doc.line(
-    p2[0], p2[1],
-    p3[0], p3[1]
+  // =====================================================
+  // TÍTULO PRINCIPAL
+  // =====================================================
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(16);
+
+  doc.setTextColor(
+    C.texto[0],
+    C.texto[1],
+    C.texto[2]
   );
 
-  doc.line(
-    p3[0], p3[1],
-    p4[0], p4[1]
+  doc.text(
+    "ODONTOGRAMA CLÍNICO",
+    centro,
+    37,
+    { align: "center" }
   );
 
-  doc.line(
-    p4[0], p4[1],
-    p1[0], p1[1]
+  // =====================================================
+  // TARJETA DEL PACIENTE
+  // =====================================================
+
+  doc.setFillColor(
+    C.fondoAzul[0],
+    C.fondoAzul[1],
+    C.fondoAzul[2]
   );
-};
 
+  doc.setDrawColor(
+    C.borde[0],
+    C.borde[1],
+    C.borde[2]
+  );
 
-// ------------------------------------
-// DIBUJAR UN DIENTE
-// ------------------------------------
+  doc.setLineWidth(0.35);
 
+  doc.roundedRect(
+    margen,
+    42,
+    W - margen * 2,
+    23,
+    3,
+    3,
+    "FD"
+  );
 
-const dibujarDiente = (
-  numero: number,
-  x: number,
-  y: number
-) => {
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(6.5);
 
-  const caras = datos[numero] || {};
+  doc.setTextColor(
+    C.cyanDark[0],
+    C.cyanDark[1],
+    C.cyanDark[2]
+  );
 
-  // =====================================
-  // TAMAÑO
-  // =====================================
+  doc.text(
+    "PACIENTE",
+    margen + 5,
+    48
+  );
 
-  const ancho = 9;
-  const alto = 14;
+  doc.text(
+    "DNI",
+    margen + 5,
+    57
+  );
 
-  const offsetX = (espacioDiente - ancho) / 2;
+  doc.text(
+    "MÉDICO",
+    100,
+    48
+  );
 
-  const dx = x + offsetX;
+  doc.text(
+    "FECHA",
+    100,
+    57
+  );
 
-  // =====================================
-  // ESCALA
-  // =====================================
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(8.5);
 
-  const sx = ancho / 100;
-  const sy = alto / 140;
+  doc.setTextColor(
+    C.texto[0],
+    C.texto[1],
+    C.texto[2]
+  );
 
-  const px = (v: number) => dx + v * sx;
-  const py = (v: number) => y + v * sy;
+  doc.text(
+    `${paciente.nombres} ${paciente.apellidos}`,
+    margen + 25,
+    48
+  );
 
-  // =====================================
-  // CONTORNO DEL DIENTE
-  // =====================================
+  doc.text(
+    paciente.dni || "—",
+    margen + 25,
+    57
+  );
 
-  const contorno = [
-    {
-      op: "m" as const,
-      c: [px(20), py(28)],
-    },
+  doc.text(
+    `Dr. ${medico}`,
+    125,
+    48
+  );
 
-    // Parte superior izquierda
-    {
-      op: "c" as const,
-      c: [
-        px(18), py(16),
-        px(30), py(8),
-        px(50), py(10),
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+
+  doc.text(
+    new Date().toLocaleDateString("es-PE"),
+    125,
+    57
+  );
+
+  // =====================================================
+  // TÍTULO ODONTOGRAMA
+  // =====================================================
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+
+  doc.setTextColor(
+    C.texto[0],
+    C.texto[1],
+    C.texto[2]
+  );
+
+  doc.text(
+    "ODONTOGRAMA",
+    centro,
+    75,
+    { align: "center" }
+  );
+
+  // =====================================================
+  // TIPO DE DIENTE
+  // =====================================================
+
+  const obtenerTipoDiente = (
+    numero: number
+  ): "incisivo" | "canino" | "premolar" | "molar" => {
+
+    const n = numero % 10;
+
+    if (n === 1 || n === 2) {
+      return "incisivo";
+    }
+
+    if (n === 3) {
+      return "canino";
+    }
+
+    // En dentición temporal (FDI 5–8), las posiciones 4 y 5 son molares.
+    const esTemporal = Math.floor(numero / 10) >= 5;
+    if (!esTemporal && (n === 4 || n === 5)) {
+      return "premolar";
+    }
+
+    return "molar";
+  };
+
+  // =====================================================
+  // DIBUJAR CARA
+  // =====================================================
+
+  const dibujarCara = (
+    puntos: [number, number][],
+    estado?: Estado
+  ) => {
+
+    const color = obtenerColorEstado(estado);
+
+    // Relleno
+    doc.setFillColor(
+      color[0],
+      color[1],
+      color[2]
+    );
+
+    doc.setDrawColor(
+      71,
+      85,
+      105
+    );
+
+    doc.setLineWidth(0.28);
+
+    // Dos triángulos para rellenar el cuadrilátero
+    doc.triangle(
+      puntos[0][0],
+      puntos[0][1],
+      puntos[1][0],
+      puntos[1][1],
+      puntos[2][0],
+      puntos[2][1],
+      "F"
+    );
+
+    doc.triangle(
+      puntos[0][0],
+      puntos[0][1],
+      puntos[2][0],
+      puntos[2][1],
+      puntos[3][0],
+      puntos[3][1],
+      "F"
+    );
+
+    // Bordes
+    for (let i = 0; i < 4; i++) {
+
+      const actual = puntos[i];
+      const siguiente = puntos[(i + 1) % 4];
+
+      doc.line(
+        actual[0],
+        actual[1],
+        siguiente[0],
+        siguiente[1]
+      );
+    }
+  };
+
+  // =====================================================
+  // DIBUJAR DIENTE
+  // =====================================================
+
+  const dibujarDiente = (
+    numero: number,
+    cx: number,
+    y: number
+  ) => {
+
+    const caras = datos[numero] || {};
+
+    const tipo = obtenerTipoDiente(numero);
+
+    // ---------------------------------------------------
+    // DIMENSIONES
+    // ---------------------------------------------------
+
+    let ancho = 10;
+    let corona = 10;
+    let raiz = 10;
+
+    if (tipo === "incisivo") {
+      ancho = 8;
+      corona = 9;
+      raiz = 11;
+    }
+
+    if (tipo === "canino") {
+      ancho = 9;
+      corona = 9;
+      raiz = 12;
+    }
+
+    if (tipo === "premolar") {
+      ancho = 10;
+      corona = 10;
+      raiz = 10;
+    }
+
+    if (tipo === "molar") {
+      ancho = 11;
+      corona = 11;
+      raiz = 8;
+    }
+
+    const x1 = cx - ancho / 2;
+    const x2 = cx + ancho / 2;
+
+    // ---------------------------------------------------
+    // CONTORNO CORONA
+    // ---------------------------------------------------
+
+    const coronaY = y;
+
+    const puntosCorona: [number, number][] = [
+      [x1 + 1, coronaY + 1],
+      [x1 + ancho * 0.28, coronaY],
+      [cx, coronaY + 0.7],
+      [x2 - ancho * 0.28, coronaY],
+      [x2 - 1, coronaY + 1],
+      [x2, coronaY + 3],
+      [x2 - 0.8, coronaY + corona - 1],
+      [cx, coronaY + corona],
+      [x1 + 0.8, coronaY + corona - 1],
+      [x1, coronaY + 3],
+    ];
+
+    // ---------------------------------------------------
+    // FONDO BLANCO
+    // ---------------------------------------------------
+
+    doc.setFillColor(
+      255,
+      255,
+      255
+    );
+
+    doc.setDrawColor(
+      71,
+      85,
+      105
+    );
+
+    doc.setLineWidth(0.45);
+
+    for (
+      let i = 1;
+      i < puntosCorona.length - 1;
+      i++
+    ) {
+
+      doc.triangle(
+        puntosCorona[0][0],
+        puntosCorona[0][1],
+
+        puntosCorona[i][0],
+        puntosCorona[i][1],
+
+        puntosCorona[i + 1][0],
+        puntosCorona[i + 1][1],
+
+        "F"
+      );
+    }
+
+    // ---------------------------------------------------
+    // COORDENADAS INTERNAS
+    // ---------------------------------------------------
+
+    const yTop = coronaY + 2.5;
+    const yMiddle = coronaY + corona * 0.48;
+    const yBottom = coronaY + corona * 0.76;
+
+    const xi = cx - ancho * 0.25;
+    const xd = cx + ancho * 0.25;
+
+    // ---------------------------------------------------
+    // CARA SUPERIOR
+    // ---------------------------------------------------
+
+    dibujarCara(
+      [
+        [x1 + 1.3, yTop],
+        [x2 - 1.3, yTop],
+        [xd, yMiddle],
+        [xi, yMiddle],
       ],
-    },
+      caras.top
+    );
 
-    // Parte superior derecha
-    {
-      op: "c" as const,
-      c: [
-        px(70), py(8),
-        px(82), py(16),
-        px(80), py(28),
+    // ---------------------------------------------------
+    // CARA IZQUIERDA
+    // ---------------------------------------------------
+
+    dibujarCara(
+      [
+        [x1 + 0.8, yMiddle],
+        [xi, yMiddle],
+        [xi, yBottom],
+        [x1 + 0.8, yBottom - 0.5],
       ],
-    },
+      caras.left
+    );
 
-    // Lado derecho de la corona
-    {
-      op: "c" as const,
-      c: [
-        px(80), py(42),
-        px(73), py(58),
-        px(65), py(72),
+    // ---------------------------------------------------
+    // CARA CENTRAL
+    // ---------------------------------------------------
+
+    dibujarCara(
+      [
+        [xi, yMiddle],
+        [xd, yMiddle],
+        [xd, yBottom],
+        [xi, yBottom],
       ],
-    },
+      caras.center
+    );
 
-    // Raíz derecha
-    {
-      op: "c" as const,
-      c: [
-        px(60), py(88),
-        px(57), py(108),
-        px(54), py(128),
+    // ---------------------------------------------------
+    // CARA DERECHA
+    // ---------------------------------------------------
+
+    dibujarCara(
+      [
+        [xd, yMiddle],
+        [x2 - 0.8, yMiddle + 0.2],
+        [x2 - 0.8, yBottom - 0.5],
+        [xd, yBottom],
       ],
-    },
+      caras.right
+    );
 
-    // Punta de la raíz
-    {
-      op: "c" as const,
-      c: [
-        px(53), py(135),
-        px(50), py(138),
-        px(47), py(135),
+    // ---------------------------------------------------
+    // CARA INFERIOR
+    // ---------------------------------------------------
+
+    dibujarCara(
+      [
+        [xi, yBottom],
+        [xd, yBottom],
+        [x2 - 1.2, coronaY + corona - 1],
+        [x1 + 1.2, coronaY + corona - 1],
       ],
-    },
+      caras.bottom
+    );
 
-    // Raíz izquierda
-    {
-      op: "c" as const,
-      c: [
-        px(44), py(118),
-        px(41), py(94),
-        px(35), py(75),
-      ],
-    },
+    // ---------------------------------------------------
+    // RAÍZ
+    // ---------------------------------------------------
 
-    // Lado izquierdo de la corona
-    {
-      op: "c" as const,
-      c: [
-        px(27), py(60),
-        px(19), py(42),
-        px(20), py(28),
-      ],
-    },
+    doc.setFillColor(
+      255,
+      255,
+      255
+    );
 
+    doc.setDrawColor(
+      71,
+      85,
+      105
+    );
+
+    doc.setLineWidth(0.4);
+
+    if (tipo === "molar") {
+
+      // Raíz izquierda
+      doc.triangle(
+        cx - 3,
+        coronaY + corona,
+        cx - 0.3,
+        coronaY + corona,
+        cx - 1.8,
+        coronaY + corona + raiz,
+        "F"
+      );
+
+      // Raíz derecha
+      doc.triangle(
+        cx + 0.3,
+        coronaY + corona,
+        cx + 3,
+        coronaY + corona,
+        cx + 1.8,
+        coronaY + corona + raiz,
+        "F"
+      );
+
+      doc.line(
+        cx - 3,
+        coronaY + corona,
+        cx - 1.8,
+        coronaY + corona + raiz
+      );
+
+      doc.line(
+        cx - 0.3,
+        coronaY + corona,
+        cx - 1.8,
+        coronaY + corona + raiz
+      );
+
+      doc.line(
+        cx + 0.3,
+        coronaY + corona,
+        cx + 1.8,
+        coronaY + corona + raiz
+      );
+
+      doc.line(
+        cx + 3,
+        coronaY + corona,
+        cx + 1.8,
+        coronaY + corona + raiz
+      );
+
+    } else {
+
+      doc.triangle(
+        cx - ancho * 0.22,
+        coronaY + corona,
+        cx + ancho * 0.22,
+        coronaY + corona,
+        cx,
+        coronaY + corona + raiz,
+        "F"
+      );
+
+      doc.line(
+        cx - ancho * 0.22,
+        coronaY + corona,
+        cx,
+        coronaY + corona + raiz
+      );
+
+      doc.line(
+        cx + ancho * 0.22,
+        coronaY + corona,
+        cx,
+        coronaY + corona + raiz
+      );
+    }
+
+    // ---------------------------------------------------
+    // CONTORNO DE LA CORONA
+    // ---------------------------------------------------
+
+    doc.setDrawColor(
+      71,
+      85,
+      105
+    );
+
+    doc.setLineWidth(0.45);
+
+    for (
+      let i = 0;
+      i < puntosCorona.length;
+      i++
+    ) {
+
+      const actual = puntosCorona[i];
+      const siguiente =
+        puntosCorona[(i + 1) % puntosCorona.length];
+
+      doc.line(
+        actual[0],
+        actual[1],
+        siguiente[0],
+        siguiente[1]
+      );
+    }
+
+    // ---------------------------------------------------
+    // DIENTE EXTRAÍDO
+    // ---------------------------------------------------
+
+    const estaExtraido =
+      Object.values(caras).some(
+        (estado) =>
+          estado === "extraido"
+      );
+
+    if (estaExtraido) {
+
+      doc.setDrawColor(
+        71,
+        85,
+        105
+      );
+
+      doc.setLineWidth(0.8);
+
+      doc.line(
+        x1 - 0.8,
+        coronaY - 0.5,
+        x2 + 0.8,
+        coronaY + corona + raiz
+      );
+
+      doc.line(
+        x2 + 0.8,
+        coronaY - 0.5,
+        x1 - 0.8,
+        coronaY + corona + raiz
+      );
+    }
+
+    // ---------------------------------------------------
+    // NÚMERO FDI
+    // ---------------------------------------------------
+
+    doc.setFont(
+      "helvetica",
+      "bold"
+    );
+
+    doc.setFontSize(6.2);
+
+    doc.setTextColor(
+      30,
+      64,
+      175
+    );
+
+    doc.text(
+      String(numero),
+      cx,
+      coronaY - 2.5,
+      {
+        align: "center",
+      }
+    );
+  };
+
+  // =====================================================
+  // POSICIÓN DE LAS 4 FILAS
+  // =====================================================
+
+  // Las cuatro filas del PDF corresponden a los cuatro cuadrantes.
+  // El espaciado se adapta para que la dentición mixta quepa en la página.
+  const posicionesY = [84, 111, 138, 165];
+
+  gruposDientesActivos.forEach((grupo, fila) => {
+    const cantidad = grupo.dientes.length;
+    if (cantidad === 0) return;
+
+    const espacioFila = cantidad > 8 ? 12 : 13;
+    const inicioFila = centro - (espacioFila * (cantidad - 1)) / 2;
+
+    grupo.dientes.forEach((diente, index) => {
+      dibujarDiente(
+        diente,
+        inicioFila + index * espacioFila,
+        posicionesY[fila]
+      );
+    });
+  });
+
+  // =====================================================
+  // LEYENDA CLÍNICA
+  // =====================================================
+
+  doc.setFillColor(
+    C.fondoAzul[0],
+    C.fondoAzul[1],
+    C.fondoAzul[2]
+  );
+
+  doc.setDrawColor(
+    C.borde[0],
+    C.borde[1],
+    C.borde[2]
+  );
+
+  doc.roundedRect(
+    margen,
+    193,
+    W - margen * 2,
+    13,
+    2.5,
+    2.5,
+    "FD"
+  );
+
+  doc.setFont(
+    "helvetica",
+    "bold"
+  );
+
+  doc.setFontSize(7);
+
+  doc.setTextColor(
+    C.texto[0],
+    C.texto[1],
+    C.texto[2]
+  );
+
+  doc.text(
+    "LEYENDA CLÍNICA",
+    margen + 5,
+    201
+  );
+
+  const leyenda = [
     {
-      op: "h" as const,
-      c: [],
+      nombre: "Sano",
+      color: C.sano,
+      x: 64,
+    },
+    {
+      nombre: "Caries",
+      color: C.caries,
+      x: 100,
+    },
+    {
+      nombre: "Restaurado",
+      color: C.restaurado,
+      x: 137,
+    },
+    {
+      nombre: "Extraído",
+      color: C.extraido,
+      x: 176,
     },
   ];
 
-  // =====================================
-  // 1. FONDO BLANCO
-  // =====================================
+  leyenda.forEach((item) => {
 
-  doc.setFillColor(255, 255, 255);
+    doc.setFillColor(
+      item.color[0],
+      item.color[1],
+      item.color[2]
+    );
 
-  doc.path(
-    contorno,
-    "F"
-  );
+    doc.setDrawColor(
+      203,
+      213,
+      225
+    );
 
-  // =====================================
-  // 2. CARAS INTERNAS
-  // =====================================
+    doc.roundedRect(
+      item.x,
+      197.5,
+      5,
+      5,
+      1,
+      1,
+      "FD"
+    );
 
-  /*
-   Estas caras están deliberadamente
-   dentro del contorno.
-  */
+    doc.setFont(
+      "helvetica",
+      "normal"
+    );
 
-  // -------------------------------------
-  // CARA SUPERIOR
-  // -------------------------------------
+    doc.setFontSize(8);
 
-  dibujarCara(
-    [
-      [px(34), py(25)],
-      [px(66), py(25)],
-      [px(60), py(40)],
-      [px(40), py(40)],
-    ],
-    caras.top
-  );
+    doc.setTextColor(
+      C.texto2[0],
+      C.texto2[1],
+      C.texto2[2]
+    );
 
-  // -------------------------------------
-  // CARA IZQUIERDA
-  // -------------------------------------
-
-  dibujarCara(
-    [
-      [px(27), py(42)],
-      [px(40), py(40)],
-      [px(40), py(70)],
-      [px(30), py(66)],
-    ],
-    caras.left
-  );
-
-  // -------------------------------------
-  // CARA CENTRAL
-  // -------------------------------------
-
-  dibujarCara(
-    [
-      [px(40), py(40)],
-      [px(60), py(40)],
-      [px(60), py(70)],
-      [px(40), py(70)],
-    ],
-    caras.center
-  );
-
-  // -------------------------------------
-  // CARA DERECHA
-  // -------------------------------------
-
-  dibujarCara(
-    [
-      [px(60), py(40)],
-      [px(73), py(43)],
-      [px(70), py(66)],
-      [px(60), py(70)],
-    ],
-    caras.right
-  );
-
-  // -------------------------------------
-  // CARA INFERIOR
-  // -------------------------------------
-
-  dibujarCara(
-    [
-      [px(40), py(70)],
-      [px(60), py(70)],
-      [px(63), py(83)],
-      [px(37), py(83)],
-    ],
-    caras.bottom
-  );
-
-  // =====================================
-  // 3. CONTORNO ENCIMA
-  // =====================================
-
-  doc.setDrawColor(68, 68, 68);
-  doc.setLineWidth(0.45);
-
-  doc.path(
-    contorno,
-    "S"
-  );
-
-  // =====================================
-  // 4. NÚMERO FDI
-  // =====================================
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(6);
-  doc.setTextColor(60, 60, 60);
-
-  doc.text(
-    String(numero),
-    dx + ancho / 2,
-    y - 2,
-    {
-      align: "center",
-    }
-  );
-};
-  // =====================================================
-  // PRIMERA FILA
-  // =====================================================
-
-  dientes
-    .slice(0, 16)
-    .forEach((diente, index) => {
-
-      dibujarDiente(
-        diente,
-        inicioX +
-          index * espacioDiente,
-        inicioY
-      );
-    });
+    doc.text(
+      item.nombre,
+      item.x + 8,
+      201.5
+    );
+  });
 
   // =====================================================
-  // SEGUNDA FILA
+  // DIAGNÓSTICO Y OBSERVACIONES
   // =====================================================
 
-  dientes
-    .slice(16, 32)
-    .forEach((diente, index) => {
+  const anchoCaja =
+    (W - margen * 2 - 4) / 2;
 
-      dibujarDiente(
-        diente,
-        inicioX +
-          index * espacioDiente,
-        inicioY + espacioFilas
-      );
-    });
-
-  // =====================================================
+  // -----------------------------------------------------
   // DIAGNÓSTICO
-  // =====================================================
+  // -----------------------------------------------------
 
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(11);
+  doc.setFillColor(
+  C.fondo[0],
+  C.fondo[1],
+  C.fondo[2]
+);
+
+doc.setDrawColor(
+  C.borde[0],
+  C.borde[1],
+  C.borde[2]
+);
+
+  doc.roundedRect(
+    margen,
+    211,
+    anchoCaja,
+    22,
+    2.5,
+    2.5,
+    "FD"
+  );
+
+  doc.setFont(
+    "helvetica",
+    "bold"
+  );
+
+  doc.setFontSize(7);
+
+  doc.setTextColor(
+    C.cyanDark[0],
+    C.cyanDark[1],
+    C.cyanDark[2]
+  );
 
   doc.text(
     "DIAGNÓSTICO",
-    margen,
-    175
+    margen + 5,
+    218
   );
 
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(10);
-
-  doc.text(
-    diagnostico || "Sin diagnóstico",
-    margen,
-    182
+  doc.setFont(
+    "helvetica",
+    "normal"
   );
 
-  // =====================================================
-  // OBSERVACIONES
-  // =====================================================
+  doc.setFontSize(6.8);
 
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(11);
-
-  doc.text(
-    "OBSERVACIONES CLÍNICAS",
-    margen,
-    195
+  doc.setTextColor(
+    C.texto2[0],
+    C.texto2[1],
+    C.texto2[2]
   );
 
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(10);
+  const diagnosticoTexto =
+    diagnostico || "Sin diagnóstico";
 
-  const textoObservaciones =
-    observaciones || "Sin observaciones";
-
-  const observacionesLineas =
+  const diagnosticoLineas =
     doc.splitTextToSize(
-      textoObservaciones,
-      anchoPagina - margen * 2
+      diagnosticoTexto,
+      anchoCaja - 10
     );
 
   doc.text(
-    observacionesLineas,
-    margen,
-    202
+    diagnosticoLineas.slice(0, 2),
+    margen + 5,
+    224
+  );
+
+  // -----------------------------------------------------
+  // OBSERVACIONES
+  // -----------------------------------------------------
+
+  const xObservaciones =
+    margen + anchoCaja + 4;
+doc.setFillColor(
+  C.fondo[0],
+  C.fondo[1],
+  C.fondo[2]
+);
+
+doc.setDrawColor(
+  C.borde[0],
+  C.borde[1],
+  C.borde[2]
+);
+
+  doc.roundedRect(
+    xObservaciones,
+    211,
+    anchoCaja,
+    22,
+    2.5,
+    2.5,
+    "FD"
+  );
+
+  doc.setFont(
+    "helvetica",
+    "bold"
+  );
+
+  doc.setFontSize(7);
+
+  doc.setTextColor(
+    C.cyanDark[0],
+    C.cyanDark[1],
+    C.cyanDark[2]
+  );
+
+  doc.text(
+    "OBSERVACIONES CLÍNICAS",
+    xObservaciones + 5,
+    218
+  );
+
+  doc.setFont(
+    "helvetica",
+    "normal"
+  );
+
+  doc.setFontSize(6.8);
+
+  doc.setTextColor(
+    C.texto2[0],
+    C.texto2[1],
+    C.texto2[2]
+  );
+
+  const observacionesTexto =
+    observaciones ||
+    "Sin observaciones clínicas.";
+
+  const observacionesLineas =
+    doc.splitTextToSize(
+      observacionesTexto,
+      anchoCaja - 10
+    );
+
+  doc.text(
+    observacionesLineas.slice(0, 2),
+    xObservaciones + 5,
+    224
   );
 
   // =====================================================
-  // RESUMEN
+  // RESUMEN ODONTOLÓGICO
   // =====================================================
 
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(11);
+  doc.setFont(
+    "helvetica",
+    "bold"
+  );
+
+  doc.setFontSize(8);
+
+  doc.setTextColor(
+    C.cyanDark[0],
+    C.cyanDark[1],
+    C.cyanDark[2]
+  );
 
   doc.text(
-    "RESUMEN",
+    "RESUMEN ODONTOLÓGICO",
     margen,
-    220
+    241
   );
 
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(10);
+  // =====================================================
+  // ICONO DE DIENTE PARA RESUMEN
+  // =====================================================
 
-  doc.text(
-    `Sanos: ${resumen.sano}`,
+ // =====================================================
+// ICONO DE DIENTE PEQUEÑO PARA RESUMEN
+// =====================================================
+
+const dibujarIconoDiente = (
+  x: number,
+  y: number,
+  color: [number, number, number]
+) => {
+
+  doc.setFillColor(
+    color[0],
+    color[1],
+    color[2]
+  );
+
+  // Corona pequeña
+  doc.roundedRect(
+    x - 3,
+    y - 4.5,
+    6,
+    7,
+    1.8,
+    1.8,
+    "F"
+  );
+
+  // Raíz izquierda
+  doc.triangle(
+    x - 2.7,
+    y + 1.5,
+    x - 0.3,
+    y + 1.5,
+    x - 1.5,
+    y + 7,
+    "F"
+  );
+
+  // Raíz derecha
+  doc.triangle(
+    x + 0.3,
+    y + 1.5,
+    x + 2.7,
+    y + 1.5,
+    x + 1.5,
+    y + 7,
+    "F"
+  );
+
+  // Brillo pequeño
+  doc.setFillColor(
+    255,
+    255,
+    255
+  );
+
+  doc.roundedRect(
+    x + 0.8,
+    y - 3.2,
+    0.9,
+    2.2,
+    0.4,
+    0.4,
+    "F"
+  );
+};
+  // =====================================================
+  // TARJETAS RESUMEN
+  // =====================================================
+
+  const dibujarTarjetaResumen = (
+    x: number,
+    titulo: string,
+    valor: number,
+    color: number[]
+  ) => {
+
+    const ancho = 43;
+    const alto = 20;
+
+    // Fondo suave del color
+    const fondoColor = [
+      Math.min(255, color[0] + 205),
+      Math.min(255, color[1] + 205),
+      Math.min(255, color[2] + 205),
+    ];
+
+    doc.setFillColor(
+      fondoColor[0],
+      fondoColor[1],
+      fondoColor[2]
+    );
+
+    doc.setDrawColor(
+      color[0],
+      color[1],
+      color[2]
+    );
+
+    doc.setLineWidth(0.25);
+
+    doc.roundedRect(
+      x,
+      245,
+      ancho,
+      alto,
+      2.5,
+      2.5,
+      "FD"
+    );
+
+    // Icono
+    dibujarIconoDiente(
+      x + 8,
+      254,
+      color as [number, number, number]
+    );
+
+    // Título
+    doc.setFont(
+      "helvetica",
+      "bold"
+    );
+
+    doc.setFontSize(5.8);
+
+    doc.setTextColor(
+      C.texto2[0],
+      C.texto2[1],
+      C.texto2[2]
+    );
+
+    doc.text(
+      titulo,
+      x + 15,
+      251.5
+    );
+
+    // Número
+    doc.setFont(
+      "helvetica",
+      "bold"
+    );
+
+    doc.setFontSize(11);
+
+    doc.setTextColor(
+      color[0],
+      color[1],
+      color[2]
+    );
+
+    doc.text(
+      String(valor),
+      x + 15,
+      260
+    );
+  };
+
+  dibujarTarjetaResumen(
     margen,
-    228
+    "Sanos",
+    resumen.sano,
+    C.sano
   );
 
-  doc.text(
-    `Caries: ${resumen.caries}`,
-    65,
-    228
+  dibujarTarjetaResumen(
+    margen + 44,
+    "Caries",
+    resumen.caries,
+    C.caries
   );
 
-  doc.text(
-    `Restaurados: ${resumen.restaurado}`,
-    105,
-    228
+  dibujarTarjetaResumen(
+    margen + 88,
+    "Restaurados",
+    resumen.restaurado,
+    C.restaurado
   );
 
-  doc.text(
-    `Extraídos: ${resumen.extraido}`,
-    160,
-    228
+  dibujarTarjetaResumen(
+    margen + 132,
+    "Extraídos",
+    resumen.extraido,
+    C.extraido
   );
 
   // =====================================================
   // FIRMA
   // =====================================================
 
-  doc.line(
-    65,
-    260,
-    145,
-    260
+  doc.setDrawColor(
+    100,
+    116,
+    139
   );
 
-  doc.setFontSize(9);
+  doc.setLineWidth(0.35);
+
+  doc.line(
+    65,
+    276,
+    145,
+    276
+  );
+
+  doc.setFont(
+    "helvetica",
+    "bold"
+  );
+
+  doc.setFontSize(7.5);
+
+  doc.setTextColor(
+    C.texto2[0],
+    C.texto2[1],
+    C.texto2[2]
+  );
+
+  doc.text(
+    `Dr. ${medico}`,
+    centro,
+    282,
+    {
+      align: "center",
+    }
+  );
+
+  doc.setFont(
+    "helvetica",
+    "normal"
+  );
+
+  doc.setFontSize(6.3);
 
   doc.text(
     "Firma y sello del médico",
-    centroPagina,
-    267,
+    centro,
+    287,
     {
       align: "center",
     }
   );
 
   // =====================================================
-  // GUARDAR
+  // PIE DE DOCUMENTO
+  // =====================================================
+
+  doc.setDrawColor(
+    C.borde[0],
+    C.borde[1],
+    C.borde[2]
+  );
+
+  doc.setLineWidth(0.25);
+
+  doc.line(
+    margen,
+    291,
+    W - margen,
+    291
+  );
+
+  doc.setFont(
+    "helvetica",
+    "normal"
+  );
+
+  doc.setFontSize(5.5);
+
+  doc.setTextColor(
+    C.texto3[0],
+    C.texto3[1],
+    C.texto3[2]
+  );
+
+  doc.text(
+    "VILLA 920 DENTAL · Documento clínico odontológico",
+    centro,
+    295,
+    {
+      align: "center",
+    }
+  );
+
+  // =====================================================
+  // GUARDAR PDF
   // =====================================================
 
   doc.save(
@@ -814,17 +1773,24 @@ const dibujarDiente = (
 
 
 
- const resumen = {
+
+
+const resumen = {
   sano: 0,
   caries: 0,
   restaurado: 0,
   extraido: 0,
 };
 
-Object.values(datos).forEach((caras) => {
-  Object.values(caras).forEach((estado) => {
-    if (estado) {
-      resumen[estado]++;
+// El resumen cuenta dientes únicos por estado, no cada cara dental.
+dientesActivos.forEach((numero) => {
+  const caras = datos[numero];
+  if (!caras) return;
+
+  const estados = Object.values(caras);
+  (Object.keys(resumen) as Array<keyof typeof resumen>).forEach((estado) => {
+    if (estados.includes(estado as Estado)) {
+      resumen[estado] += 1;
     }
   });
 });
@@ -1180,28 +2146,104 @@ Object.values(datos).forEach((caras) => {
 
 <div className="bg-white dark:bg-slate-900 rounded-2xl shadow border border-slate-200 dark:border-slate-700 p-6 mb-6">
 
-  <h3 className="text-lg font-bold mb-6">
-    Odontograma
-  </h3>
+  <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-cyan-600 dark:text-cyan-400 mb-1">
+        Odontograma inteligente
+      </p>
+      <h3 className="text-lg font-extrabold mb-1">Dentición del paciente</h3>
+      <p className="text-sm text-slate-500 dark:text-slate-400">
+        {edadPaciente === null
+          ? "Seleccionamos una vista inicial; confirma que coincida con la boca del paciente."
+          : `Edad: ${edadPaciente} ${edadPaciente === 1 ? "año" : "años"}. Sugerencia por edad: ${denticionSugerida === "temporal" ? "temporal" : denticionSugerida === "mixta" ? "mixta" : "permanente"}. Confirma según la evaluación clínica.`}
+      </p>
+    </div>
+    <div className="w-full sm:w-64">
+      <label htmlFor="denticion-paciente" className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-2">
+        Ajustar dentición si es necesario
+      </label>
+      <select
+        id="denticion-paciente"
+        value={denticion}
+        onChange={(e) => setDenticion(e.target.value as Denticion)}
+        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-800 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+      >
+        <option value="temporal">Dentición temporal</option>
+        <option value="mixta">Dentición mixta</option>
+        <option value="permanente">Dentición permanente</option>
+      </select>
+    </div>
+  </div>
+
+  {denticion === "mixta" && (
+    <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50/70 p-4 dark:border-amber-500/30 dark:bg-amber-500/5">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-4">
+        <div>
+          <h4 className="font-extrabold text-slate-900 dark:text-white">Selecciona los dientes presentes</h4>
+          <p className="text-xs text-slate-600 dark:text-slate-300 mt-1">Marca únicamente las piezas que el odontólogo confirme que están presentes en la boca del paciente.</p>
+        </div>
+        <span className="text-xs font-bold text-amber-800 dark:text-amber-300">{dientesMixtos.length} seleccionados</span>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {gruposDisponibles.map((grupo) => (
+          <div key={grupo.id} className="rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
+            <p className="text-xs font-extrabold text-slate-600 dark:text-slate-300 mb-3">{grupo.nombre}</p>
+            <div className="flex flex-wrap gap-2">
+              {grupo.dientes.map((numero) => {
+                const activo = dientesMixtos.includes(numero);
+                return (
+                  <button
+                    key={numero}
+                    type="button"
+                    onClick={() => alternarDienteMixto(numero)}
+                    aria-pressed={activo}
+                    className={`min-w-10 rounded-lg border px-2.5 py-2 text-xs font-extrabold transition-colors ${
+                      activo
+                        ? "border-cyan-600 bg-cyan-600 text-white dark:border-cyan-400 dark:bg-cyan-400 dark:text-slate-950"
+                        : "border-slate-200 bg-slate-50 text-slate-600 hover:border-cyan-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                    }`}
+                  >
+                    {numero}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )}
+
+  <h3 className="text-lg font-bold mb-2">Odontograma</h3>
+  <p className="text-xs text-slate-500 dark:text-slate-400 mb-5">
+    {denticion === "temporal" ? "Dentición temporal · nomenclatura FDI" : denticion === "mixta" ? "Dentición mixta · dientes seleccionados" : "Dentición permanente · nomenclatura FDI"}
+    {" · "}{dientesActivos.length} dientes visibles
+  </p>
 
   <div className="grid lg:grid-cols-4 gap-8 items-start">
 
-    {/* Dientes */}
-    <div className="lg:col-span-3 flex justify-center">
-
-      <div className="grid grid-cols-8 gap-3">
-
-        {dientes.map((diente) => (
-          <Tooth
-            key={diente}
-            numero={diente}
-            estado={datos[diente]}
-            onFaceClick={handleFaceClick}
-          />
-        ))}
-
-      </div>
-
+    {/* Dientes agrupados por cuadrante FDI */}
+    <div className="lg:col-span-3 grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {gruposDientesActivos.map((grupo) => (
+        <div key={grupo.id} className="min-w-0 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/40 p-3">
+          <p className="text-[11px] font-extrabold text-slate-500 dark:text-slate-400 mb-3">{grupo.nombre}</p>
+          {grupo.dientes.length === 0 ? (
+            <p className="text-xs text-slate-400 dark:text-slate-500 py-2">Sin dientes seleccionados</p>
+          ) : (
+            <div className="grid grid-cols-4 gap-2 justify-items-center">
+              {grupo.dientes.map((diente) => (
+                <Tooth
+                  key={diente}
+                  numero={diente}
+                  estado={datos[diente]}
+                  onFaceClick={handleFaceClick}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      ))}
     </div>
 
     {/* Leyenda */}
@@ -1537,16 +2579,43 @@ Cerrar
         </button>
       </div>
 
-      {/* DIENTES HISTÓRICOS */}
-      <div className="grid grid-cols-8 gap-3 mb-6">
-        {dientes.map((diente) => (
-          <Tooth
-            key={diente}
-            numero={diente}
-            estado={odontogramaHistorico.datos?.[diente]}
-            onFaceClick={() => {}}
-          />
-        ))}
+      {/* DIENTES HISTÓRICOS: respeta la dentición guardada en ese registro */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+        {(() => {
+          const datosHistoricos = odontogramaHistorico.datos || {};
+          const metaHistorica = datosHistoricos._meta;
+          const tipoHistorico: Denticion =
+            metaHistorica?.denticion === "temporal" || metaHistorica?.denticion === "mixta" || metaHistorica?.denticion === "permanente"
+              ? metaHistorica.denticion
+              : "permanente";
+          const dientesHistoricosMixtos: number[] = Array.isArray(metaHistorica?.dientesMixtos)
+            ? metaHistorica.dientesMixtos
+            : [];
+          const permitidosHistoricos = tipoHistorico === "temporal"
+            ? dientesTemporales
+            : tipoHistorico === "mixta"
+              ? dientesHistoricosMixtos
+              : dientesPermanentes;
+
+          return gruposDisponibles.map((grupo) => {
+            const dientesGrupo = grupo.dientes.filter((numero) => permitidosHistoricos.includes(numero));
+            return (
+              <div key={grupo.id} className="rounded-xl border border-slate-200 dark:border-slate-700 p-3">
+                <p className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-3">{grupo.nombre}</p>
+                <div className="grid grid-cols-4 gap-2 justify-items-center">
+                  {dientesGrupo.map((diente) => (
+                    <Tooth
+                      key={diente}
+                      numero={diente}
+                      estado={datosHistoricos[diente]}
+                      onFaceClick={() => {}}
+                    />
+                  ))}
+                </div>
+              </div>
+            );
+          });
+        })()}
       </div>
 
       {/* INFORMACIÓN HISTÓRICA */}

@@ -1,7 +1,11 @@
+
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import { Search, CalendarPlus, Loader2 } from 'lucide-react';
 import toast from "react-hot-toast";
+
+import { tratamientos } from './TratamientosPanel';
+
 
 interface Paciente {
   id: number;
@@ -65,6 +69,8 @@ const [tratamientoData, setTratamientoData] = useState({
   costo: 0,
   estado: 'pendiente'
 });
+
+
 const [historiaExiste, setHistoriaExiste] = useState(false);
 
 const [historiaCreadaId, setHistoriaCreadaId] = useState<number | null>(null);
@@ -357,10 +363,6 @@ const guardarTratamiento = async () => {
   }
 };
 
-
-
-
-  
 
 
 
@@ -1089,337 +1091,1369 @@ setShowViewModal(true);
         </div>
       )}
 
-      {/* MODAL DETALLE CITA Y CONTROL DE ESTADO */}
-      {showViewModal && selectedCita && (
-        <div className="fixed inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm flex justify-center items-center z-50 p-4">
-          <div className="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-2xl shadow-2xl p-6 md:p-8 relative border border-slate-200 dark:border-slate-800 max-h-[90vh] overflow-y-auto">
-            <button onClick={() => setShowViewModal(false)} className="absolute top-5 right-5 text-slate-400 hover:text-slate-600 dark:hover:text-white text-2xl font-semibold cursor-pointer">×</button>
+    
 
-            <div className="border-b border-slate-200 dark:border-slate-800 pb-4 mb-6">
-              <h2 className="text-2xl md:text-3xl font-extrabold text-blue-900 dark:text-cyan-400">Detalle de la Cita Médica</h2>
-              <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Control de sesión y administración del estado de la cita en tiempo real.</p>
+{/* MODAL DETALLE CITA Y CONTROL DE ESTADO */}
+{showViewModal && selectedCita && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 dark:bg-black/75 backdrop-blur-md p-4">
+
+    <div className="relative w-full max-w-3xl max-h-[92vh] overflow-y-auto rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xl">
+
+      {/* HEADER */}
+      <div className="px-6 md:px-7 pt-6 pb-5 border-b border-slate-200 dark:border-slate-800">
+
+        <div className="flex items-start justify-between gap-4">
+
+          <div className="flex items-center gap-4">
+
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-cyan-50 dark:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth="1.8"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M8 3.75h8A2.25 2.25 0 0118.25 6v14.25H5.75V6A2.25 2.25 0 018 3.75z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M9 3.75V2.5h6v1.25M9 9h6M9 13h6M9 17h3"
+                />
+              </svg>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 text-sm">
-              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800/40">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Paciente</span>
-                <p className="font-extrabold text-slate-800 dark:text-slate-200 text-base mt-1">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-cyan-600 dark:text-cyan-400">
+                Gestión de consulta
+              </p>
+
+              <h2 className="mt-0.5 text-xl md:text-2xl font-extrabold text-slate-900 dark:text-white">
+                Detalle de la Cita Médica
+              </h2>
+
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                Información y control de la atención médica.
+              </p>
+            </div>
+
+          </div>
+
+          <button
+            onClick={() => setShowViewModal(false)}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-white"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+
+        </div>
+
+      </div>
+
+
+      {/* INFORMACIÓN PRINCIPAL */}
+      <div className="px-6 md:px-7 py-5">
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+
+
+          {/* PACIENTE */}
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50 p-4">
+
+            <div className="flex items-start gap-3">
+
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M15.75 7.25a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M4.5 20a7.5 7.5 0 0115 0"
+                  />
+                </svg>
+              </div>
+
+              <div className="min-w-0">
+                <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  Paciente
+                </span>
+
+                <p className="mt-1 truncate text-sm font-extrabold text-slate-800 dark:text-white">
                   {selectedCita.pacientes?.nombres} {selectedCita.pacientes?.apellidos}
                 </p>
-                <p className="text-xs text-slate-500 font-mono mt-0.5">DNI: {selectedCita.pacientes?.dni}</p>
-              </div>
 
-              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800/40">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Médico Especialista</span>
-                <p className="font-extrabold text-slate-800 dark:text-slate-200 text-base mt-1">
-                  Dr. {selectedCita.medicos?.nombres} {selectedCita.medicos?.apellidos}
-                </p>
-                <p className="text-xs text-slate-500 mt-0.5">{selectedCita.especialidad}</p>
-              </div>
-
-              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800/40">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Fecha de Atención</span>
-                <p className="font-bold text-slate-800 dark:text-slate-200 text-base mt-1">
-                  {formatFecha(selectedCita.fecha)}
-                </p>
-              </div>
-
-              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800/40">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Hora Citada</span>
-                <p className="font-bold text-slate-800 dark:text-slate-200 text-base mt-1 font-mono">
-                  {selectedCita.hora.slice(0, 5)}
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-4 mt-5 text-sm">
-              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800/40">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">Motivo de Consulta</span>
-                <p className="text-slate-800 dark:text-slate-300 font-medium">{selectedCita.motivo_consulta || 'Sin motivo específico.'}</p>
-              </div>
-
-              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800/40">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">Descripción / Notas Adicionales</span>
-                <p className="text-slate-800 dark:text-slate-300 leading-relaxed">{selectedCita.descripcion || 'Sin descripción o comentarios adicionales.'}</p>
-              </div>
-            </div>
-
-            <div className="mt-6 p-5 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-100 dark:border-slate-800/40 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Estado Actual</span>
-                <div className="mt-1">
-                  <span className={`px-3.5 py-1.5 rounded-full text-xs font-black tracking-wide border shadow-sm ${
-                    selectedCita.estado === 'pendiente' ? 'bg-amber-50 text-amber-750 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-500/10' :
-                    selectedCita.estado === 'confirmada' ? 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-500/10' :
-                    selectedCita.estado === 'atendida' ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-500/10' :
-                    'bg-red-50 text-red-700 border-red-200 dark:bg-red-950/40 dark:text-red-400 dark:border-red-500/10'
-                  }`}>
-                    {selectedCita.estado.toUpperCase()}
+                <div className="mt-1 flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400">
+                  <span>DNI</span>
+                  <span className="font-mono font-semibold">
+                    {selectedCita.pacientes?.dni}
                   </span>
                 </div>
               </div>
 
-              {selectedCita.estado === 'pendiente' && (
-                <div className="flex gap-2">
-                  <button onClick={() => updateEstadoCita(selectedCita.id!, 'confirmada')} disabled={isSubmitting} className="px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 active:scale-95 transition-all cursor-pointer shadow-md">Confirmar Cita</button>
-                  <button onClick={() => updateEstadoCita(selectedCita.id!, 'cancelada')} disabled={isSubmitting} className="px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-red-600 hover:bg-red-700 active:scale-95 transition-all cursor-pointer shadow-md">Cancelar Cita</button>
-                </div>
-              )}
-
-              {selectedCita.estado === 'confirmada' && (
-                <div className="flex gap-2">
-                  <button onClick={() => updateEstadoCita(selectedCita.id!, 'atendida')} disabled={isSubmitting} className="px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 active:scale-95 transition-all cursor-pointer shadow-md">Marcar como Atendida</button>
-                  <button onClick={() => updateEstadoCita(selectedCita.id!, 'cancelada')} disabled={isSubmitting} className="px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-red-600 hover:bg-red-700 active:scale-95 transition-all cursor-pointer shadow-md">Cancelar Cita</button>
-                </div>
-              )}
-
-              {selectedCita.estado === 'cancelada' && (
-                <div className="text-xs text-red-500 font-bold bg-red-50 dark:bg-red-950/20 px-3.5 py-2 rounded-xl">La cita ha sido cancelada y archivada.</div>
-              )}
-
-              {selectedCita.estado === 'atendida' && (
-  <div className="flex flex-col gap-3">
-
-    <div className="text-xs text-emerald-500 font-bold bg-emerald-50 dark:bg-emerald-950/20 px-3.5 py-2 rounded-xl">
-      La consulta fue completada correctamente.
-    </div>
-
-    {!historiaExiste ? (
-
-  <button
-    onClick={() => setShowHistoriaModal(true)}
-    className="px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-cyan-600 hover:bg-cyan-700 transition-all"
-  >
-    Registrar Historia Clínica
-  </button>
-
-) : (
-
-  <div className="flex flex-col gap-2">
-
-    <div className="text-sm font-semibold text-emerald-500">
-      ✓ Historia clínica registrada
-    </div>
-
-  
-  </div>
-
-)}
-
-  </div>
-)}
             </div>
 
-            <div className="flex justify-end border-t border-slate-200 dark:border-slate-800 pt-5 mt-6">
-              <button onClick={() => setShowViewModal(false)} className="px-5 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold transition hover:bg-slate-200 cursor-pointer">Cerrar Detalle</button>
-            </div>
           </div>
+
+
+          {/* MÉDICO */}
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50 p-4">
+
+            <div className="flex items-start gap-3">
+
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 4v16M7 9h10M7 15h10"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M8.5 4a3.5 3.5 0 017 0"
+                  />
+                </svg>
+              </div>
+
+              <div className="min-w-0">
+                <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  Médico Especialista
+                </span>
+
+                <p className="mt-1 truncate text-sm font-extrabold text-slate-800 dark:text-white">
+                  Dr. {selectedCita.medicos?.nombres} {selectedCita.medicos?.apellidos}
+                </p>
+
+                <p className="mt-1 truncate text-[11px] text-slate-500 dark:text-slate-400">
+                  {selectedCita.especialidad}
+                </p>
+              </div>
+
+            </div>
+
+          </div>
+
+
+          {/* FECHA */}
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50 p-4">
+
+            <div className="flex items-start gap-3">
+
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                >
+                  <rect
+                    x="4"
+                    y="5"
+                    width="16"
+                    height="15"
+                    rx="2"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    d="M8 3v4M16 3v4M4 9h16"
+                  />
+                </svg>
+              </div>
+
+              <div>
+                <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  Fecha de Atención
+                </span>
+
+                <p className="mt-1 text-sm font-extrabold text-slate-800 dark:text-white">
+                  {formatFecha(selectedCita.fecha)}
+                </p>
+              </div>
+
+            </div>
+
+          </div>
+
+
+          {/* HORA */}
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50 p-4">
+
+            <div className="flex items-start gap-3">
+
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                >
+                  <circle cx="12" cy="12" r="8.5" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 7v5l3 2"
+                  />
+                </svg>
+              </div>
+
+              <div>
+                <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  Hora Citada
+                </span>
+
+                <p className="mt-1 font-mono text-sm font-extrabold text-slate-800 dark:text-white">
+                  {selectedCita.hora.slice(0, 5)}
+                </p>
+              </div>
+
+            </div>
+
+          </div>
+
         </div>
 
 
+        {/* MOTIVO */}
+        <div className="mt-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
 
-      )}
-      {showHistoriaModal && (
-  <div className="fixed inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm flex justify-center items-center z-50 p-4">
+          <div className="flex items-center gap-3">
 
-    <div className="bg-white dark:bg-slate-900 w-full max-w-3xl rounded-2xl shadow-2xl p-6 md:p-8 border border-slate-200 dark:border-slate-800">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-cyan-50 dark:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth="1.8"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M5 6.5A2.5 2.5 0 017.5 4h9A2.5 2.5 0 0119 6.5v6a2.5 2.5 0 01-2.5 2.5h-5L7 19v-4H7.5A2.5 2.5 0 015 12.5v-6z"
+                />
+              </svg>
+            </div>
 
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-extrabold text-slate-800 dark:text-white">
-          Registrar Historia Clínica
-        </h2>
+            <div>
+              <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                Motivo de Consulta
+              </span>
+
+              <p className="mt-1 text-sm font-semibold text-slate-800 dark:text-slate-200">
+                {selectedCita.motivo_consulta || 'Sin motivo específico.'}
+              </p>
+            </div>
+
+          </div>
+
+        </div>
+
+
+        {/* DESCRIPCIÓN */}
+        <div className="mt-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
+
+          <div className="flex items-start gap-3">
+
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth="1.8"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M7 4h10a2 2 0 012 2v12a2 2 0 01-2 2H7a2 2 0 01-2-2V6a2 2 0 012-2z"
+                />
+                <path
+                  strokeLinecap="round"
+                  d="M8 9h8M8 13h8M8 17h5"
+                />
+              </svg>
+            </div>
+
+            <div className="min-w-0">
+              <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                Descripción / Notas Adicionales
+              </span>
+
+              <p className="mt-1 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+                {selectedCita.descripcion || 'Sin descripción o comentarios adicionales.'}
+              </p>
+            </div>
+
+          </div>
+
+        </div>
+
+
+        {/* ESTADO Y ACCIONES */}
+        <div className="mt-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 p-4">
+
+          <div className="flex flex-col gap-4">
+
+            {/* ESTADO */}
+            <div className="flex items-center justify-between gap-4">
+
+              <div className="flex items-center gap-3">
+
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                  >
+                    <circle cx="12" cy="12" r="8.5" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M8 12l2.5 2.5L16 9"
+                    />
+                  </svg>
+                </div>
+
+                <div>
+                  <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    Estado Actual
+                  </span>
+
+                  <span
+                    className={`mt-1 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black tracking-wide border ${
+                      selectedCita.estado === 'pendiente'
+                        ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-500/10'
+                        : selectedCita.estado === 'confirmada'
+                        ? 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-500/10'
+                        : selectedCita.estado === 'atendida'
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-500/10'
+                        : 'bg-red-50 text-red-700 border-red-200 dark:bg-red-950/40 dark:text-red-400 dark:border-red-500/10'
+                    }`}
+                  >
+                    <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                    {selectedCita.estado.toUpperCase()}
+                  </span>
+                </div>
+
+              </div>
+
+            </div>
+
+
+            {/* ACCIONES */}
+            {selectedCita.estado === 'pendiente' && (
+              <div className="flex flex-col sm:flex-row gap-2">
+
+                <button
+                  onClick={() => updateEstadoCita(selectedCita.id!, 'confirmada')}
+                  disabled={isSubmitting}
+                  className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] transition-all cursor-pointer shadow-sm disabled:opacity-50"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                  Confirmar Cita
+                </button>
+
+                <button
+                  onClick={() => updateEstadoCita(selectedCita.id!, 'cancelada')}
+                  disabled={isSubmitting}
+                  className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-red-600 hover:bg-red-700 active:scale-[0.98] transition-all cursor-pointer shadow-sm disabled:opacity-50"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M6 6l12 12M6 18L18 6"
+                    />
+                  </svg>
+                  Cancelar Cita
+                </button>
+
+              </div>
+            )}
+
+
+            {selectedCita.estado === 'confirmada' && (
+              <div className="flex flex-col sm:flex-row gap-2">
+
+                <button
+                  onClick={() => updateEstadoCita(selectedCita.id!, 'atendida')}
+                  disabled={isSubmitting}
+                  className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 active:scale-[0.98] transition-all cursor-pointer shadow-sm disabled:opacity-50"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M5 12h14M13 6l6 6-6 6"
+                    />
+                  </svg>
+                  Marcar como Atendida
+                </button>
+
+                <button
+                  onClick={() => updateEstadoCita(selectedCita.id!, 'cancelada')}
+                  disabled={isSubmitting}
+                  className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-red-600 hover:bg-red-700 active:scale-[0.98] transition-all cursor-pointer shadow-sm disabled:opacity-50"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M6 6l12 12M6 18L18 6"
+                    />
+                  </svg>
+                  Cancelar Cita
+                </button>
+
+              </div>
+            )}
+
+
+            {selectedCita.estado === 'cancelada' && (
+              <div className="flex items-center gap-2 rounded-xl bg-red-50 dark:bg-red-950/20 px-3.5 py-2.5 text-xs font-bold text-red-600 dark:text-red-400">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4 shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <circle cx="12" cy="12" r="9" />
+                  <path
+                    strokeLinecap="round"
+                    d="M9 9l6 6M15 9l-6 6"
+                  />
+                </svg>
+                La cita ha sido cancelada y archivada.
+              </div>
+            )}
+
+
+            {selectedCita.estado === 'atendida' && (
+              <div className="flex flex-col gap-3">
+
+                <div className="flex items-center gap-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/20 px-3.5 py-2.5 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4 shrink-0"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                  La consulta fue completada correctamente.
+                </div>
+
+
+                {!historiaExiste ? (
+
+                  <button
+                    onClick={() => setShowHistoriaModal(true)}
+                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-cyan-600 hover:bg-cyan-700 active:scale-[0.98] transition-all cursor-pointer shadow-sm"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M7 4h10a2 2 0 012 2v12a2 2 0 01-2 2H7a2 2 0 01-2-2V6a2 2 0 012-2z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M9 9h6M9 13h4"
+                      />
+                    </svg>
+                    Registrar Historia Clínica
+                  </button>
+
+                ) : (
+
+                  <div className="flex flex-col gap-2">
+
+                    <div className="flex items-center gap-2 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                      Historia clínica registrada
+                    </div>
+
+                    <button
+                      
+                      className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 active:scale-[0.98] transition-all cursor-pointer shadow-sm"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M6 4h12v16H6z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          d="M9 8h6M9 12h6M9 16h4"
+                        />
+                      </svg>
+                      Abrir Historial Clínico
+                    </button>
+
+                  </div>
+
+                )}
+
+              </div>
+            )}
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      {/* FOOTER */}
+      <div className="flex justify-end border-t border-slate-200 dark:border-slate-800 px-6 md:px-7 py-4">
+
+        <button
+          onClick={() => setShowViewModal(false)}
+          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-sm font-bold text-slate-700 dark:text-slate-300 transition hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer"
+        >
+          Cerrar Detalle
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+)}
+
+
+
+
+
+
+{showHistoriaModal && selectedCita && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 dark:bg-black/70 backdrop-blur-md p-3 sm:p-5">
+
+    <div className="w-full max-w-5xl max-h-[92vh] overflow-y-auto rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xl">
+
+      {/* HEADER */}
+      <div className="flex items-start justify-between px-6 py-5 border-b border-slate-200 dark:border-slate-800">
+
+        <div className="flex items-center gap-4">
+
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-cyan-50 dark:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth="1.8"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M9 5h6M9 3h6a2 2 0 012 2v1h1a2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2h1V5a2 2 0 012-2z"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M8 11h8M8 15h6"
+              />
+            </svg>
+          </div>
+
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-cyan-600 dark:text-cyan-400">
+              Registro clínico
+            </p>
+
+            <h2 className="text-xl font-extrabold text-slate-800 dark:text-white">
+              Registrar Historia Clínica
+            </h2>
+
+            <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+              Registre la información clínica correspondiente a esta consulta.
+            </p>
+          </div>
+
+        </div>
+
         <button
           onClick={() => setShowHistoriaModal(false)}
-          className="text-2xl text-slate-400 hover:text-red-500"
+          className="flex h-9 w-9 items-center justify-center rounded-xl text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-white"
         >
-          ×
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-5 w-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
         </button>
+
       </div>
 
-      <div className="space-y-4">
 
-        <div>
-          <label className="block mb-2 font-bold">
-            Motivo de Consulta
-          </label>
+      {/* INFORMACIÓN DE LA CITA */}
+      <div className="px-6 pt-5">
 
-          <textarea
-            value={historiaData.motivo_consulta}
-            onChange={(e) =>
-              setHistoriaData({
-                ...historiaData,
-                motivo_consulta: e.target.value
-              })
-            }
-            className="w-full border rounded-xl p-3"
-            rows={3}
-          />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 px-4 py-3">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              Paciente
+            </p>
+            <p className="mt-1 text-sm font-bold text-slate-800 dark:text-white truncate">
+              {selectedCita.pacientes?.nombres} {selectedCita.pacientes?.apellidos}
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 px-4 py-3">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              DNI
+            </p>
+            <p className="mt-1 text-sm font-bold text-slate-800 dark:text-white">
+              {selectedCita.pacientes?.dni}
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 px-4 py-3">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              Especialidad
+            </p>
+            <p className="mt-1 text-sm font-bold text-slate-800 dark:text-white truncate">
+              {selectedCita.especialidad}
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40 px-4 py-3">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              Fecha de consulta
+            </p>
+            <p className="mt-1 text-sm font-bold text-slate-800 dark:text-white">
+              {formatFecha(selectedCita.fecha)}
+            </p>
+          </div>
+
         </div>
 
-        <div>
-          <label className="block mb-2 font-bold">
-            Diagnóstico
-          </label>
+      </div>
 
-          <textarea
-            value={historiaData.diagnostico}
-            onChange={(e) =>
-              setHistoriaData({
-                ...historiaData,
-                diagnostico: e.target.value
-              })
-            }
-            className="w-full border rounded-xl p-3"
-            rows={3}
-          />
+
+      {/* FORMULARIO */}
+      <div className="px-6 py-5">
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+
+          {/* MOTIVO DE CONSULTA */}
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
+
+            <div className="flex items-center gap-2.5 mb-3">
+
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M8 10h8M8 14h5"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M20 11.5a8.5 8.5 0 01-8.5 8.5 8.5 8.5 0 01-4.27-1.14L4 20l1.14-3.23A8.5 8.5 0 1119.85 9"
+                  />
+                </svg>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-slate-800 dark:text-white">
+                  Motivo de Consulta
+                </label>
+                <p className="text-[11px] text-slate-400">
+                  Motivo principal de la atención
+                </p>
+              </div>
+
+            </div>
+
+            <textarea
+              value={historiaData.motivo_consulta}
+              onChange={(e) =>
+                setHistoriaData({
+                  ...historiaData,
+                  motivo_consulta: e.target.value
+                })
+              }
+              rows={3}
+              placeholder="Describa el motivo por el cual el paciente acude a consulta..."
+              className="w-full resize-none rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950/50 px-3.5 py-3 text-sm text-slate-800 dark:text-white placeholder:text-slate-400 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/10"
+            />
+
+          </div>
+
+
+          {/* DIAGNÓSTICO */}
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
+
+            <div className="flex items-center gap-2.5 mb-3">
+
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                >
+                  <circle cx="11" cy="11" r="6.5" />
+                  <path
+                    strokeLinecap="round"
+                    d="M16 16l4 4"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    d="M8.5 11h5M11 8.5v5"
+                  />
+                </svg>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-slate-800 dark:text-white">
+                  Diagnóstico
+                </label>
+                <p className="text-[11px] text-slate-400">
+                  Evaluación clínica realizada
+                </p>
+              </div>
+
+            </div>
+
+            <textarea
+              value={historiaData.diagnostico}
+              onChange={(e) =>
+                setHistoriaData({
+                  ...historiaData,
+                  diagnostico: e.target.value
+                })
+              }
+              rows={3}
+              placeholder="Ingrese el diagnóstico clínico..."
+              className="w-full resize-none rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950/50 px-3.5 py-3 text-sm text-slate-800 dark:text-white placeholder:text-slate-400 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/10"
+            />
+
+          </div>
+
+
+          {/* TRATAMIENTO REALIZADO */}
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
+
+            <div className="flex items-center gap-2.5 mb-3">
+
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 3v18M3 12h18"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M7 7l10 10M17 7L7 17"
+                  />
+                </svg>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-slate-800 dark:text-white">
+                  Tratamiento Realizado
+                </label>
+                <p className="text-[11px] text-slate-400">
+                  Procedimiento realizado durante la consulta
+                </p>
+              </div>
+
+            </div>
+
+            <textarea
+              value={historiaData.tratamiento_realizado}
+              onChange={(e) =>
+                setHistoriaData({
+                  ...historiaData,
+                  tratamiento_realizado: e.target.value
+                })
+              }
+              rows={3}
+              placeholder="Describa el tratamiento o procedimiento realizado..."
+              className="w-full resize-none rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950/50 px-3.5 py-3 text-sm text-slate-800 dark:text-white placeholder:text-slate-400 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/10"
+            />
+
+          </div>
+
+
+          {/* OBSERVACIONES */}
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
+
+            <div className="flex items-center gap-2.5 mb-3">
+
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M7 4h10a2 2 0 012 2v12a2 2 0 01-2 2H7a2 2 0 01-2-2V6a2 2 0 012-2z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M8 9h8M8 13h6M8 17h4"
+                  />
+                </svg>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-slate-800 dark:text-white">
+                  Observaciones
+                </label>
+                <p className="text-[11px] text-slate-400">
+                  Información adicional de la consulta
+                </p>
+              </div>
+
+            </div>
+
+            <textarea
+              value={historiaData.observaciones}
+              onChange={(e) =>
+                setHistoriaData({
+                  ...historiaData,
+                  observaciones: e.target.value
+                })
+              }
+              rows={3}
+              placeholder="Agregue observaciones clínicas relevantes..."
+              className="w-full resize-none rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950/50 px-3.5 py-3 text-sm text-slate-800 dark:text-white placeholder:text-slate-400 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/10"
+            />
+
+          </div>
+
         </div>
 
-        <div>
-          <label className="block mb-2 font-bold">
-            Tratamiento Realizado
-          </label>
+      </div>
 
-          <textarea
-            value={historiaData.tratamiento_realizado}
-            onChange={(e) =>
-              setHistoriaData({
-                ...historiaData,
-                tratamiento_realizado: e.target.value
-              })
-            }
-            className="w-full border rounded-xl p-3"
-            rows={3}
-          />
-        </div>
 
-        <div>
-          <label className="block mb-2 font-bold">
-            Observaciones
-          </label>
+      {/* FOOTER */}
+      <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/30">
 
-          <textarea
-            value={historiaData.observaciones}
-            onChange={(e) =>
-              setHistoriaData({
-                ...historiaData,
-                observaciones: e.target.value
-              })
-            }
-            className="w-full border rounded-xl p-3"
-            rows={3}
-          />
-        </div>
+        <button
+          onClick={() => setShowHistoriaModal(false)}
+          className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-bold text-slate-600 dark:text-slate-300 transition hover:bg-slate-100 dark:hover:bg-slate-800"
+        >
+          Cancelar
+        </button>
 
-        <div className="flex justify-end gap-3 mt-6">
-          <button
-            onClick={() => setShowHistoriaModal(false)}
-            className="px-5 py-3 rounded-xl border border-slate-300"
-          >
-            Cancelar
-          </button>
-
-          <button
-            onClick={guardarHistoriaClinica}
-            className="px-5 py-3 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white font-bold"
-          >
-            Guardar Historia Clínica
-          </button>
-        </div>
+        <button
+          onClick={guardarHistoriaClinica}
+          className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-600 to-cyan-500 text-sm font-bold text-white shadow-lg shadow-cyan-500/20 transition hover:from-cyan-700 hover:to-cyan-600"
+        >
+          Guardar Historia Clínica
+        </button>
 
       </div>
 
     </div>
-</div>
-      )}
-      {showTratamientoModal && (
-  <div className="fixed inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm flex justify-center items-center z-50 p-4">
 
-    <div className="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-2xl shadow-2xl p-6 border border-slate-200 dark:border-slate-800">
+  </div>
+)}
 
-      <h2 className="text-2xl font-bold mb-6 text-slate-800 dark:text-white">
-        Registrar Tratamiento
-      </h2>
+{showTratamientoModal && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/50 dark:bg-black/70 backdrop-blur-md">
 
-      <div className="space-y-4">
+    <div
+      className="
+        relative w-full max-w-2xl
+        max-h-[92vh] overflow-y-auto
+        rounded-3xl
+        border border-slate-200 dark:border-slate-800
+        bg-white dark:bg-slate-900
+        shadow-2xl
+      "
+    >
 
+      {/* ENCABEZADO */}
+      <div className="px-6 md:px-8 pt-6 md:pt-7 pb-5 border-b border-slate-200 dark:border-slate-800">
+
+        <div className="flex items-start justify-between gap-4">
+
+          <div className="flex items-start gap-4">
+
+            <div
+              className="
+                w-12 h-12 shrink-0
+                rounded-2xl
+                bg-blue-50 dark:bg-blue-500/10
+                border border-blue-200 dark:border-blue-500/20
+                flex items-center justify-center
+              "
+            >
+              <svg
+                className="w-6 h-6 text-blue-600 dark:text-blue-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth="1.8"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 6v12m6-6H6"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M20 12a8 8 0 11-16 0 8 8 0 0116 0z"
+                />
+              </svg>
+            </div>
+
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-blue-600 dark:text-blue-400 mb-1">
+                Plan de atención
+              </p>
+
+              <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+                Registrar Tratamiento
+              </h2>
+
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                Registra el tratamiento indicado para el paciente.
+              </p>
+            </div>
+
+          </div>
+
+          <button
+            onClick={() => setShowTratamientoModal(false)}
+            className="
+              w-9 h-9 shrink-0
+              rounded-xl
+              flex items-center justify-center
+              text-slate-400
+              hover:text-slate-700 dark:hover:text-white
+              hover:bg-slate-100 dark:hover:bg-slate-800
+              transition-all
+              cursor-pointer
+            "
+            aria-label="Cerrar"
+          >
+            <span className="text-2xl leading-none">×</span>
+          </button>
+
+        </div>
+
+        {/* PACIENTE */}
+        {selectedCita && (
+          <div className="mt-5 rounded-2xl border border-blue-100 dark:border-blue-500/10 bg-blue-50/60 dark:bg-blue-950/20 px-4 py-3">
+
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-wider text-blue-500 dark:text-blue-400">
+                  Paciente
+                </p>
+
+                <p className="text-sm font-extrabold text-slate-800 dark:text-slate-200 mt-1">
+                  {selectedCita.pacientes?.nombres} {selectedCita.pacientes?.apellidos}
+                </p>
+              </div>
+
+              <div className="text-left sm:text-right">
+                <p className="text-xs font-mono text-slate-500 dark:text-slate-400">
+                  DNI: {selectedCita.pacientes?.dni}
+                </p>
+
+                <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
+                  {selectedCita.especialidad}
+                </p>
+              </div>
+
+            </div>
+
+          </div>
+        )}
+
+      </div>
+
+
+      {/* FORMULARIO */}
+      <div className="p-6 md:p-8 space-y-5">
+
+        {/* NOMBRE */}
         <div>
-          <label className="block mb-2 font-bold">
+
+          <label className="block text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
             Nombre del tratamiento
           </label>
 
-          <input
-            type="text"
-            value={tratamientoData.nombre_tratamiento}
-            onChange={(e)=>
-              setTratamientoData({
-                ...tratamientoData,
-                nombre_tratamiento:e.target.value
-              })
-            }
-            className="w-full border rounded-xl p-3"
-          />
+          <div className="relative">
+
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center pointer-events-none">
+              <span className="text-sm text-blue-600 dark:text-blue-400">
+                🦷
+              </span>
+            </div>
+
+                        <select
+              value={tratamientoData.nombre_tratamiento}
+              onChange={(e) => {
+                const tratamiento = tratamientos.find(
+                  (t) => t.nombre === e.target.value
+                );
+
+                
+
+                setTratamientoData({
+                  ...tratamientoData,
+                  nombre_tratamiento: tratamiento?.nombre || '',
+                  descripcion: tratamiento?.descripcion || '',
+                  costo: tratamiento?.precio || 0
+                });
+              }}
+              className="
+                w-full
+                h-14
+                pl-16 pr-4
+                rounded-xl
+                border border-slate-200 dark:border-slate-800
+                bg-slate-50 dark:bg-slate-950
+                text-sm font-semibold
+                text-slate-800 dark:text-slate-200
+                outline-none
+                focus:border-cyan-500
+                focus:ring-4 focus:ring-cyan-500/10
+                transition-all
+              "
+            >
+              <option value="">
+                Seleccione un tratamiento
+              </option>
+
+              {tratamientos.map((tratamiento) => (
+                <option
+                  key={tratamiento.id}
+                  value={tratamiento.nombre}
+                >
+                  {tratamiento.nombre}
+                </option>
+              ))}
+            </select>
+
+          </div>
+
         </div>
 
+
+        {/* DESCRIPCIÓN */}
         <div>
-          <label className="block mb-2 font-bold">
+
+          <label className="block text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
             Descripción
           </label>
 
           <textarea
-            rows={4}
+            rows={5}
             value={tratamientoData.descripcion}
-            onChange={(e)=>
+            onChange={(e) =>
               setTratamientoData({
                 ...tratamientoData,
-                descripcion:e.target.value
+                descripcion: e.target.value
               })
             }
-            className="w-full border rounded-xl p-3"
+            placeholder="Describe brevemente el procedimiento, indicaciones o detalles del tratamiento..."
+            className="
+              w-full
+              rounded-xl
+              border border-slate-200 dark:border-slate-800
+              bg-slate-50 dark:bg-slate-950
+              px-4 py-3
+              text-sm
+              text-slate-800 dark:text-slate-200
+              placeholder:text-slate-400 dark:placeholder:text-slate-600
+              outline-none
+              resize-none
+              focus:border-cyan-500
+              focus:ring-4 focus:ring-cyan-500/10
+              transition-all
+            "
           />
+
         </div>
 
-        <div>
-          <label className="block mb-2 font-bold">
-            Costo (S/)
+
+        {/* COSTO */}
+        <div
+          className="
+            rounded-2xl
+            border border-emerald-200 dark:border-emerald-500/20
+            bg-emerald-50/60 dark:bg-emerald-950/20
+            p-5
+          "
+        >
+
+          <label className="block text-xs font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400 mb-2">
+            Costo del tratamiento
           </label>
 
-          <input
-            type="number"
-            value={tratamientoData.costo}
-            onChange={(e)=>
-              setTratamientoData({
-                ...tratamientoData,
-                costo:Number(e.target.value)
-              })
-            }
-            className="w-full border rounded-xl p-3"
-          />
-        </div>
+          <div className="flex items-center gap-3">
 
-        <div className="flex justify-end gap-3">
+            <div className="flex items-center justify-center w-11 h-11 rounded-xl bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-500/20">
+              <span className="text-sm font-black text-emerald-600 dark:text-emerald-400">
+                S/
+              </span>
+            </div>
 
-          <button
-            onClick={()=>setShowTratamientoModal(false)}
-            className="px-5 py-3 rounded-xl border"
-          >
-            Cancelar
-          </button>
+            <div className="flex-1">
 
-          <button
-          onClick={guardarTratamiento}
-            className="px-5 py-3 rounded-xl bg-cyan-600 text-white font-bold"
-          >
-            Guardar Tratamiento
-          </button>
+              <input
+                type="number"
+                value={tratamientoData.costo}
+                onChange={(e) =>
+                  setTratamientoData({
+                    ...tratamientoData,
+                    costo: Number(e.target.value)
+                  })
+                }
+                min="0"
+                step="0.01"
+                className="
+                  w-full
+                  h-12
+                  rounded-xl
+                  border border-emerald-200 dark:border-emerald-500/20
+                  bg-white dark:bg-slate-900
+                  px-4
+                  text-lg font-extrabold
+                  text-slate-800 dark:text-white
+                  outline-none
+                  focus:border-emerald-500
+                  focus:ring-4 focus:ring-emerald-500/10
+                  transition-all
+                "
+              />
+
+            </div>
+
+          </div>
+
+          <p className="text-[11px] text-emerald-700/70 dark:text-emerald-400/70 mt-2">
+            Ingresa el costo correspondiente al tratamiento indicado.
+          </p>
 
         </div>
 
       </div>
 
-    </div>
 
+      {/* FOOTER */}
+      <div
+        className="
+          px-6 md:px-8 py-5
+          border-t border-slate-200 dark:border-slate-800
+          bg-slate-50/70 dark:bg-slate-950/40
+          flex flex-col-reverse sm:flex-row
+          sm:justify-end
+          gap-3
+        "
+      >
+
+        <button
+          onClick={() => setShowTratamientoModal(false)}
+          className="
+            px-5 py-3
+            rounded-xl
+            border border-slate-200 dark:border-slate-700
+            bg-white dark:bg-slate-900
+            text-sm font-bold
+            text-slate-600 dark:text-slate-300
+            hover:bg-slate-100 dark:hover:bg-slate-800
+            transition-all
+            cursor-pointer
+          "
+        >
+          Cancelar
+        </button>
+
+        <button
+          onClick={guardarTratamiento}
+          className="
+            inline-flex items-center justify-center gap-2
+            px-5 py-3
+            rounded-xl
+            bg-gradient-to-r from-cyan-500 to-blue-600
+            hover:from-cyan-600 hover:to-blue-700
+            text-sm font-extrabold text-white
+            shadow-md shadow-cyan-500/10
+            hover:shadow-lg
+            active:scale-[0.98]
+            transition-all
+            cursor-pointer
+          "
+        >
+          <span className="text-base">✓</span>
+          Guardar Tratamiento
+        </button>
+
+      </div>
+
+    </div>
   </div>
 )}
+
+
+      
+    
 {/*showVerHistoriaModal && historiaSeleccionada && (
   <div className="fixed inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm flex justify-center items-center z-50 p-4">
 
@@ -1633,3 +2667,4 @@ setShowViewModal(true);
   
   
 )}
+

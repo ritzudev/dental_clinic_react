@@ -9,6 +9,7 @@ import { PacientesPanel } from './components/PacientesPanel';
 import { MedicosPanel } from './components/MedicosPanel';
 import { HorariosPanel } from './components/HorariosPanel';
 import { CitasPanel } from './components/CitasPanel';
+import { AgendaSemanalPanel } from './components/AgendaSemanalPanel';
 import { HistoriaClinicaPanel } from './components/HistoriaClinicaPanel';
 import { TratamientosPanel } from './components/TratamientosPanel';
 import { PlanTratamientoPanel } from './components/PlanTratamientoPanel';
@@ -124,6 +125,7 @@ useEffect(() => {
       {view === 'medicos' && <MedicosPanel />}
       {view === 'horarios' && <HorariosPanel />}
       {view === 'citas' && <CitasPanel />}
+        {view === 'agenda-semanal' && <AgendaSemanalPanel />}
       {view === 'historia-clinica' && <HistoriaClinicaPanel />}
       {view === 'plan-tratamiento' && <PlanTratamientoPanel />}
       {view === 'tratamientos' && <TratamientosPanel />}
