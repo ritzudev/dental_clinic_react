@@ -481,7 +481,7 @@ export function AgendaSemanalPanel() {
               onClick={() => cambiarSemana(-1)}
               aria-label="Semana anterior"
               title="Semana anterior"
-              className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:border-cyan-300 hover:bg-cyan-50 hover:text-cyan-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-cyan-500"
+              className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:border-cyan-300 hover:bg-cyan-50 hover:text-cyan-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-cyan-500 cursor-pointer"
             >
               <ChevronLeft className="h-5 w-5" />
             </button>
@@ -489,7 +489,7 @@ export function AgendaSemanalPanel() {
             <button
               type="button"
               onClick={irAHoy}
-              className="h-10 rounded-xl border border-cyan-200 bg-cyan-50 px-4 text-sm font-bold text-cyan-800 transition hover:bg-cyan-100 dark:border-cyan-800 dark:bg-cyan-500/10 dark:text-cyan-200 dark:hover:bg-cyan-500/20"
+              className="h-10 rounded-xl border border-cyan-200 bg-cyan-50 px-4 text-sm font-bold text-cyan-800 transition hover:bg-cyan-100 dark:border-cyan-800 dark:bg-cyan-500/10 dark:text-cyan-200 dark:hover:bg-cyan-500/20 cursor-pointer"
             >
               Hoy
             </button>
@@ -499,7 +499,7 @@ export function AgendaSemanalPanel() {
               onClick={() => cambiarSemana(1)}
               aria-label="Semana siguiente"
               title="Semana siguiente"
-              className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:border-cyan-300 hover:bg-cyan-50 hover:text-cyan-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-cyan-500"
+              className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:border-cyan-300 hover:bg-cyan-50 hover:text-cyan-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-cyan-500 cursor-pointer"
             >
               <ChevronRight className="h-5 w-5" />
             </button>
@@ -508,7 +508,7 @@ export function AgendaSemanalPanel() {
               type="button"
               onClick={() => void cargarCitas()}
               disabled={actualizando}
-              className="flex h-10 items-center justify-center gap-2 rounded-xl bg-cyan-600 px-4 text-sm font-bold text-white shadow-sm transition hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
+              className="flex h-10 items-center justify-center gap-2 rounded-xl bg-cyan-600 px-4 text-sm font-bold text-white shadow-sm transition hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
             >
               <RefreshCw
                 className={`h-4 w-4 ${actualizando ? 'animate-spin' : ''}`}

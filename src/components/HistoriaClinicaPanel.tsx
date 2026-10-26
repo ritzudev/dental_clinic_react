@@ -284,7 +284,7 @@ return (
                       onClick={() =>
                         cargarHistorial(paciente.id, paciente)
                       }
-                      className={`w-full text-left rounded-xl p-3 transition border ${
+                      className={`w-full text-left rounded-xl p-3 transition border cursor-pointer ${
                         seleccionado
                           ? 'bg-cyan-500/10 border-cyan-500/40'
                           : 'border-transparent hover:bg-slate-50 dark:hover:bg-slate-800/60'

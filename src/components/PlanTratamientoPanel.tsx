@@ -693,6 +693,7 @@ export const PlanTratamientoPanel = () => {
               text-sm
               font-semibold
               transition
+              cursor-pointer
             "
           >
             Limpiar

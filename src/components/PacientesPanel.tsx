@@ -346,7 +346,7 @@ export const PacientesPanel: React.FC<{ setView: (v: string) => void }> = ({
                 setSubmitMessage('');
                 setShowCreateModal(true);
               }}
-              className="inline-flex shrink-0 items-center justify-center gap-2.5 rounded-xl bg-slate-900 px-5 py-3.5 text-sm font-extrabold text-white shadow-lg shadow-slate-900/10 transition hover:-translate-y-0.5 hover:bg-slate-800 active:translate-y-0 dark:bg-cyan-500 dark:text-slate-950 dark:shadow-cyan-950/20 dark:hover:bg-cyan-400"
+              className="inline-flex shrink-0 items-center justify-center gap-2.5 rounded-xl bg-slate-900 px-5 py-3.5 text-sm font-extrabold text-white shadow-lg shadow-slate-900/10 transition hover:-translate-y-0.5 hover:bg-slate-800 active:translate-y-0 dark:bg-cyan-500 dark:text-slate-950 dark:shadow-cyan-950/20 dark:hover:bg-cyan-400 cursor-pointer"
             >
               <UserPlus className="h-4 w-4" />
               Registrar paciente

@@ -718,6 +718,7 @@ export const TratamientosPanel = () => {
                 font-semibold
                 border
                 transition
+                cursor-pointer
                 ${
                   activa
                     ? "bg-cyan-600 border-cyan-600 text-white shadow-sm"
@@ -1036,6 +1037,7 @@ export const TratamientosPanel = () => {
                       hover:border-cyan-600
                       hover:text-white
                       transition
+                      cursor-pointer
                     "
                   >
                     Ver información
