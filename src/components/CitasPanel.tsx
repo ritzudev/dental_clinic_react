@@ -1,4 +1,6 @@
 
+
+
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import { Search, CalendarPlus, Loader2 } from 'lucide-react';
@@ -74,6 +76,7 @@ const [tratamientoData, setTratamientoData] = useState({
 const [historiaExiste, setHistoriaExiste] = useState(false);
 
 const [historiaCreadaId, setHistoriaCreadaId] = useState<number | null>(null);
+
 
 
 

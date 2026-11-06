@@ -1,3 +1,4 @@
+
 import { supabase } from "../lib/supabase";
 import type { Pago, Tratamiento } from "../types/pago";
 
@@ -25,7 +26,7 @@ export const obtenerPagos = async (): Promise<Pago[]> => {
 
   if (error) {
     console.error("Error al obtener pagos:", error);
-    return [];
+    throw error;
   }
 
   return (data ?? []) as Pago[];
@@ -52,7 +53,6 @@ export const buscarPacientePorDni = async (dni: string) => {
 
 /* ==========================================================
    BUSCAR PACIENTES POR DNI PARCIAL
-   Se utiliza mientras el usuario escribe.
 ========================================================== */
 
 export const buscarPacientesPorDni = async (
@@ -60,9 +60,7 @@ export const buscarPacientesPorDni = async (
 ) => {
   const valor = dni.trim();
 
-  if (!valor) {
-    return [];
-  }
+  if (!valor) return [];
 
   const { data, error } = await supabase
     .from("pacientes")
@@ -79,18 +77,19 @@ export const buscarPacientesPorDni = async (
 
   if (error) {
     console.error(
-      "Error al buscar coincidencias de pacientes:",
+      "Error al buscar pacientes:",
       error
     );
 
-    return [];
+    throw error;
   }
 
   return data ?? [];
 };
 
 /* ==========================================================
-   OBTENER TRATAMIENTOS PENDIENTES DEL PACIENTE
+   OBTENER TRATAMIENTOS PENDIENTES
+   FUNCIÓN ORIGINAL: SE CONSERVA POR COMPATIBILIDAD
 ========================================================== */
 
 export const obtenerTratamientosPaciente = async (
@@ -109,14 +108,80 @@ export const obtenerTratamientosPaciente = async (
       error
     );
 
-    return [];
+    throw error;
   }
 
   return (data ?? []) as Tratamiento[];
 };
 
 /* ==========================================================
-   REGISTRAR PAGO
+   OBTENER TRATAMIENTOS PENDIENTES DE COBRO
+
+   El estado clínico del tratamiento es independiente
+   del estado financiero.
+
+   Un tratamiento con un pago registrado no vuelve
+   a aparecer en la lista de cobros.
+========================================================== */
+
+export const obtenerTratamientosPendientesCobro = async (
+  pacienteId: number
+): Promise<Tratamiento[]> => {
+
+  // Obtener tratamientos del paciente.
+  const { data: tratamientos, error: errorTratamientos } =
+    await supabase
+      .from("tratamientos")
+      .select("*")
+      .eq("paciente_id", pacienteId)
+      .order("fecha_inicio", { ascending: false });
+
+  if (errorTratamientos) {
+    console.error(
+      "Error al obtener tratamientos:",
+      errorTratamientos
+    );
+
+    throw errorTratamientos;
+  }
+
+  // Obtener pagos relacionados con sus tratamientos.
+  const { data: pagos, error: errorPagos } =
+    await supabase
+      .from("pagos")
+      .select("tratamiento_id")
+      .eq("paciente_id", pacienteId)
+      .not("tratamiento_id", "is", null);
+
+  if (errorPagos) {
+    console.error(
+      "Error al consultar pagos existentes:",
+      errorPagos
+    );
+
+    throw errorPagos;
+  }
+
+  // Identificar tratamientos que ya tienen un pago.
+  const tratamientosPagados = new Set<number>(
+    (pagos ?? [])
+      .map((pago) => pago.tratamiento_id)
+      .filter((id): id is number => id !== null)
+  );
+
+  // Mostrar solamente tratamientos sin pago registrado.
+  return ((tratamientos ?? []) as Tratamiento[]).filter(
+    (tratamiento) => !tratamientosPagados.has(tratamiento.id)
+  );
+};
+
+/* ==========================================================
+   REGISTRAR PAGO COMPLETO
+
+   - Verifica que el tratamiento pertenezca al paciente.
+   - Verifica que el importe corresponda al costo total.
+   - Evita registrar otro pago si ya existe uno.
+   - No modifica el estado clínico del tratamiento.
 ========================================================== */
 
 export const registrarPago = async (
@@ -124,28 +189,107 @@ export const registrarPago = async (
   tratamientoId: number,
   monto: number
 ) => {
+
+  if (
+    !Number.isFinite(monto) ||
+    monto <= 0
+  ) {
+    throw new Error("El monto del pago no es válido.");
+  }
+
+  // Verificar que el tratamiento pertenezca al paciente.
+  const { data: tratamiento, error: errorTratamiento } =
+    await supabase
+      .from("tratamientos")
+      .select("id, paciente_id, costo")
+      .eq("id", tratamientoId)
+      .eq("paciente_id", pacienteId)
+      .maybeSingle();
+
+  if (errorTratamiento) {
+    console.error(
+      "Error al verificar tratamiento:",
+      errorTratamiento
+    );
+
+    throw errorTratamiento;
+  }
+
+  if (!tratamiento) {
+    throw new Error(
+      "El tratamiento no pertenece al paciente seleccionado."
+    );
+  }
+
+  const costoTotal = Number(tratamiento.costo);
+
+  if (
+    !Number.isFinite(costoTotal) ||
+    costoTotal <= 0
+  ) {
+    throw new Error(
+      "El tratamiento no tiene un costo válido."
+    );
+  }
+
+  // Comprobar que se esté registrando el pago completo.
+  const montoEnCentimos = Math.round(monto * 100);
+  const costoEnCentimos = Math.round(costoTotal * 100);
+
+  if (montoEnCentimos !== costoEnCentimos) {
+    throw new Error(
+      "El importe debe coincidir con el costo total del tratamiento."
+    );
+  }
+
+  // Evitar registrar un segundo pago para el mismo tratamiento.
+  const { data: pagoExistente, error: errorPago } =
+    await supabase
+      .from("pagos")
+      .select("id")
+      .eq("paciente_id", pacienteId)
+      .eq("tratamiento_id", tratamientoId)
+      .limit(1);
+
+  if (errorPago) {
+    console.error(
+      "Error al verificar pagos anteriores:",
+      errorPago
+    );
+
+    throw errorPago;
+  }
+
+  if (pagoExistente && pagoExistente.length > 0) {
+    throw new Error(
+      "Este tratamiento ya tiene un pago registrado."
+    );
+  }
+
+  // Registrar el pago en Supabase.
   const { error } = await supabase
     .from("pagos")
     .insert({
       paciente_id: pacienteId,
       tratamiento_id: tratamientoId,
-      monto,
-      /*
-       * Se mantienen estos campos porque tu tabla actual
-       * los utiliza, pero ya NO se muestran al usuario.
-       */
-      metodo_pago: "No especificado",
-      observaciones: "",
+      monto: costoTotal
     });
 
   if (error) {
-    console.error("Error al registrar pago:", error);
+    console.error(
+      "Error al registrar pago:",
+      error
+    );
+
     throw error;
   }
 };
 
 /* ==========================================================
    FINALIZAR TRATAMIENTO
+
+   Se conserva por compatibilidad con otras partes
+   del sistema. No se ejecuta al registrar un pago.
 ========================================================== */
 
 export const finalizarTratamiento = async (
@@ -154,7 +298,7 @@ export const finalizarTratamiento = async (
   const { error } = await supabase
     .from("tratamientos")
     .update({
-      estado: "finalizado",
+      estado: "finalizado"
     })
     .eq("id", tratamientoId);
 
@@ -219,7 +363,7 @@ export const eliminarPago = async (
 
 /* ==========================================================
    RESUMEN PARA DASHBOARD
-   Se conserva por compatibilidad con el sistema.
+   SE CONSERVA POR COMPATIBILIDAD
 ========================================================== */
 
 export const obtenerResumenPagos = async () => {
@@ -233,7 +377,7 @@ export const obtenerResumenPagos = async () => {
       error
     );
 
-    return [];
+    throw error;
   }
 
   return data ?? [];
@@ -265,7 +409,7 @@ export const obtenerPagosPaciente = async (
       error
     );
 
-    return [];
+    throw error;
   }
 
   return (data ?? []) as Pago[];
