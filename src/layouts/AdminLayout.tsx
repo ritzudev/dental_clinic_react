@@ -17,8 +17,7 @@ import {
   ChevronRight,
   Menu,
   X,
-  HeartPulse,
-  Settings2,
+  HeartPulse
 } from "lucide-react";
 
 interface AdminLayoutProps {
